@@ -21,6 +21,21 @@ class WeeklyReport:
 
 
 @dataclass
+class DiagnosticPanel:
+    week: int
+    results: Dict[str, str]
+    delta: Dict[str, str]
+
+
+@dataclass
+class MicroReplan:
+    week: int
+    version: str
+    reason: str
+    changes: List[str]
+
+
+@dataclass
 class JourneyState:
     current_week: int
     total_weeks: int
@@ -28,6 +43,8 @@ class JourneyState:
     current_medications: List[str]
     exercise_plan: Dict
     nutrition_plan: Dict
+    diagnostic_panels: List[DiagnosticPanel]
+    micro_replans: List[MicroReplan]
 
 
 @dataclass
