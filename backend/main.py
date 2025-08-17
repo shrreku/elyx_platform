@@ -30,12 +30,14 @@ from data.db import (
     decisions_add,
     decisions_list,
     decisions_get_with_why,
-    experiments_add,
-    experiments_list,
-    experiments_add_measurement,
-    experiments_results,
+    experiment_ledger_add,
+    experiment_ledger_list,
+    experiment_ledger_add_measurement,
+    experiment_ledger_results,
     user_profile_get,
     user_profile_set,
+    member_timeline_state_get,
+    member_timeline_state_set,
 )
 from agents.issue_extractor import IssueExtractor
 from agents.plan_extractor import PlanExtractor
@@ -159,6 +161,9 @@ class ExperimentIn(BaseModel):
     status: str = "planned"  # planned|running|completed|cancelled
     outcome: Optional[str] = None
     success: Optional[bool] = None
+    intervention: Optional[str] = None
+    decision: Optional[str] = None
+    plan_section_updated: Optional[str] = None
 
 
 class ExperimentMeasurementIn(BaseModel):
@@ -224,7 +229,7 @@ def api_reset_soft():
             "decisions",
             "decision_evidence",
             "decision_messages",
-            "experiments",
+            "experiment_ledger",
             "experiment_measurements",
         ]:
             cur.execute(f"DELETE FROM {table}")
@@ -664,14 +669,30 @@ def api_decisions_why(decision_id: str):
     return decisions_get_with_why(decision_id)
 
 
-# Experiments API
-@app.get("/experiments")
-def api_experiments_list():
-    return experiments_list()
+# Member Timeline State API
+@app.get("/member/{user_id}/state")
+def api_get_member_state(user_id: str):
+    return member_timeline_state_get(user_id)
 
 
-@app.post("/experiments")
-def api_experiments_create(exp: ExperimentIn):
+class MemberTimelineStateIn(BaseModel):
+    user_id: str
+    state: Dict
+
+@app.post("/member/state")
+def api_set_member_state(req: MemberTimelineStateIn):
+    ok = member_timeline_state_set(req.user_id, req.state)
+    return {"ok": ok}
+
+
+# Experiment Ledger API
+@app.get("/experiment-ledger")
+def api_experiment_ledger_list():
+    return experiment_ledger_list()
+
+
+@app.post("/experiment-ledger")
+def api_experiment_ledger_create(exp: ExperimentIn):
     exp_id = exp.id or os.urandom(8).hex()
     payload = {
         "id": exp_id,
@@ -684,13 +705,16 @@ def api_experiments_create(exp: ExperimentIn):
         "outcome": exp.outcome,
         "success": 1 if exp.success else 0 if exp.success is not None else None,
         "created_at": __import__("datetime").datetime.now().isoformat(),
+        "intervention": exp.intervention,
+        "decision": exp.decision,
+        "plan_section_updated": exp.plan_section_updated,
     }
-    experiments_add(payload)
+    experiment_ledger_add(payload)
     return {"ok": True, "id": exp_id}
 
 
-@app.post("/experiments/{experiment_id}/measurements")
-def api_experiments_add_measurement(experiment_id: str, m: ExperimentMeasurementIn):
+@app.post("/experiment-ledger/{experiment_id}/measurements")
+def api_experiment_ledger_add_measurement(experiment_id: str, m: ExperimentMeasurementIn):
     payload = {
         "id": os.urandom(8).hex(),
         "experiment_id": experiment_id,
@@ -699,13 +723,13 @@ def api_experiments_add_measurement(experiment_id: str, m: ExperimentMeasurement
         "ts": m.ts,
         "raw_json": (None if m.raw_json is None else __import__("json").dumps(m.raw_json)),
     }
-    experiments_add_measurement(payload)
+    experiment_ledger_add_measurement(payload)
     return {"ok": True, "id": payload["id"]}
 
 
-@app.get("/experiments/results")
-def api_experiments_results():
-    return experiments_results()
+@app.get("/experiment-ledger/results")
+def api_experiment_ledger_results():
+    return experiment_ledger_results()
 
 
 # Enhanced routing and SLA tracking endpoints
@@ -725,28 +749,28 @@ def api_sla_violations():
     return []
 
 
-@app.post("/experiments/propose")
-def api_experiments_propose(issue: str, context: Optional[Dict] = None):
+@app.post("/experiment-ledger/propose")
+def api_experiment_ledger_propose(issue: str, context: Optional[Dict] = None):
     """Propose experiment based on member issue"""
     proposal = experiment_engine.propose_experiment(issue, context)
     return proposal
 
 
-@app.post("/experiments/{experiment_id}/start")
-def api_experiments_start(experiment_id: str):
+@app.post("/experiment-ledger/{experiment_id}/start")
+def api_experiment_ledger_start(experiment_id: str):
     """Start a planned experiment"""
     success = experiment_engine.start_experiment(experiment_id)
     return {"ok": success}
 
 
-@app.get("/experiments/active")
-def api_experiments_active():
+@app.get("/experiment-ledger/active")
+def api_experiment_ledger_active():
     """Get active experiments"""
     return experiment_engine.get_active_experiments()
 
 
-@app.get("/experiments/successful")
-def api_experiments_successful():
+@app.get("/experiment-ledger/successful")
+def api_experiment_ledger_successful():
     """Get successful experiment results"""
     return experiment_engine.get_experiment_results()
 
@@ -824,21 +848,39 @@ def api_generate_mock_data():
         
         # Add episodes
         for episode_data in mock_episodes:
-            episodes_add(
-                title=episode_data["title"],
-                trigger_type=episode_data["trigger_type"],
-                trigger_description=episode_data["trigger_description"],
-                priority=episode_data["priority"],
-                member_state_before=episode_data["member_state_before"]
-            )
-        
-        # Add experiments  
+            episodes_add({
+                "id": uuid.uuid4().hex,
+                "user_id": "rohan",
+                "title": episode_data["title"],
+                "trigger_type": episode_data["trigger_type"],
+                "trigger_description": episode_data["trigger_description"],
+                "trigger_timestamp": (datetime.now() - timedelta(days=random.randint(1, 30))).isoformat(),
+                "status": "open",
+                "priority": episode_data["priority"],
+                "member_state_before": episode_data["member_state_before"],
+                "member_state_after": None,
+                "confidence": random.uniform(0.7, 0.95),
+                "created_at": datetime.now().isoformat(),
+            })
+
+        # Add experiments
         for exp_data in mock_experiments:
-            experiments_add(
-                hypothesis=exp_data["hypothesis"],
-                template=exp_data["template"],
-                member_id=exp_data["member_id"]
-            )
+            payload = {
+                "id": uuid.uuid4().hex,
+                "template": exp_data.get("template"),
+                "hypothesis": exp_data.get("hypothesis"),
+                "protocol_json": __import__("json").dumps(exp_data.get("protocol_json", {})),
+                "duration": exp_data.get("duration", "2 weeks"),
+                "member_id": exp_data.get("member_id", "rohan"),
+                "status": exp_data.get("status", "planned"),
+                "outcome": exp_data.get("outcome"),
+                "success": exp_data.get("success"),
+                "created_at": datetime.now().isoformat(),
+                "intervention": exp_data.get("intervention"),
+                "decision": exp_data.get("decision"),
+                "plan_section_updated": exp_data.get("plan_section_updated"),
+            }
+            experiment_ledger_add(payload)
             
         # Add messages to conversation history
         conversation_history = persistence.load_conversation_history()

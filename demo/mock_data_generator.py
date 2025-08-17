@@ -131,10 +131,13 @@ def generate_mock_experiments():
                 "adherence_tracking": "daily_log"
             },
             "member_id": "rohan",
-            "status": "running"
+            "status": "running",
+            "intervention": "Take magnesium threonate 400mg 1 hour before bedtime",
+            "decision": "progress",
+            "plan_section_updated": "Supplement Protocol"
         },
         {
-            "template": "CGM_MEAL_TEST", 
+            "template": "CGM_MEAL_TEST",
             "hypothesis": "Eating protein before carbs will reduce glucose spike by 30%",
             "protocol_json": {
                 "intervention": "Consume protein portion 10 minutes before carbohydrates",
@@ -145,25 +148,31 @@ def generate_mock_experiments():
             "member_id": "rohan",
             "status": "completed",
             "outcome": "Average glucose peak reduced by 32%, hypothesis confirmed",
-            "success": True
+            "success": True,
+            "intervention": "Consume protein portion 10 minutes before carbohydrates",
+            "decision": "progress",
+            "plan_section_updated": "Nutrition Plan"
         },
         {
             "template": "EXERCISE_PROTOCOL",
             "hypothesis": "Morning HIIT sessions will improve HRV without affecting recovery",
             "protocol_json": {
                 "intervention": "15-minute HIIT session 3x/week at 7am",
-                "duration": "4 weeks", 
+                "duration": "4 weeks",
                 "measurements": ["hrv", "recovery_score", "workout_performance"],
                 "adherence_tracking": "whoop_data"
             },
             "member_id": "rohan",
-            "status": "planned"
+            "status": "planned",
+            "intervention": "15-minute HIIT session 3x/week at 7am",
+            "decision": "progress",
+            "plan_section_updated": "Exercise Protocol"
         }
     ]
-    
+
     for experiment in experiments:
         try:
-            response = requests.post(f"{BASE_URL}/experiments", json=experiment)
+            response = requests.post(f"{BASE_URL}/experiment-ledger", json=experiment)
             if response.status_code == 200:
                 print(f"✅ Created experiment: {experiment['hypothesis'][:50]}...")
             else:
