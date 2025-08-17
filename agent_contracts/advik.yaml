@@ -1,0 +1,21 @@
+agent_name: Advik
+inputs:
+  - wearable_streams
+  - journal_tags
+  - training_logs
+  - travel_schedule
+outputs:
+  - hypotheses
+  - micro_experiments
+  - training_progression
+  - recovery_day_calls
+kpis:
+  - hrv_trend
+  - recovery_trend
+  - rhr_direction
+  - sleep_stage_improvements
+sla_target_hours: 3
+artifacts:
+  - experiment_logs
+  - training_blocks
+  - travel_light_schedules

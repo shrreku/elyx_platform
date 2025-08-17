@@ -170,10 +170,22 @@ def init_db():
             );
             """
         )
-        # Experiments
+        # Member Timeline State
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS experiments (
+            CREATE TABLE IF NOT EXISTS member_timeline_state (
+                user_id TEXT PRIMARY KEY,
+                state_json TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            );
+            """
+        )
+        con.commit()
+        # Experiment Ledger
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS experiment_ledger (
                 id TEXT PRIMARY KEY,
                 template TEXT,
                 hypothesis TEXT,
@@ -187,6 +199,16 @@ def init_db():
             );
             """
         )
+        # Ensure new columns exist for upgrades
+        exp_cols = {r[1] for r in cur.execute("PRAGMA table_info(experiment_ledger)").fetchall()}
+        def ensure_exp(col: str, ddl: str):
+            if col not in exp_cols:
+                cur.execute(f"ALTER TABLE experiment_ledger ADD COLUMN {ddl}")
+        ensure_exp("intervention", "intervention TEXT")
+        ensure_exp("decision", "decision TEXT")
+        ensure_exp("plan_section_updated", "plan_section_updated TEXT")
+        con.commit()
+
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS experiment_measurements (
@@ -543,16 +565,18 @@ def decisions_get_with_why(decision_id: str) -> Dict:
         }
 
 
-# Experiments CRUD
-def experiments_add(item: Dict):
+# Experiment Ledger CRUD
+def experiment_ledger_add(item: Dict):
     with _conn() as con:
         cur = con.cursor()
         cur.execute(
             """
-            INSERT OR IGNORE INTO experiments (
-                id, template, hypothesis, protocol_json, duration, member_id, status, outcome, success, created_at
+            INSERT OR IGNORE INTO experiment_ledger (
+                id, template, hypothesis, protocol_json, duration, member_id, status, outcome, success, created_at,
+                intervention, decision, plan_section_updated
             ) VALUES (
-                :id, :template, :hypothesis, :protocol_json, :duration, :member_id, :status, :outcome, :success, :created_at
+                :id, :template, :hypothesis, :protocol_json, :duration, :member_id, :status, :outcome, :success, :created_at,
+                :intervention, :decision, :plan_section_updated
             )
             """,
             item,
@@ -560,14 +584,14 @@ def experiments_add(item: Dict):
         con.commit()
 
 
-def experiments_list() -> List[Dict]:
+def experiment_ledger_list() -> List[Dict]:
     with _conn() as con:
         con.row_factory = sqlite3.Row
-        rows = con.execute("SELECT * FROM experiments ORDER BY created_at DESC").fetchall()
+        rows = con.execute("SELECT * FROM experiment_ledger ORDER BY created_at DESC").fetchall()
         return [dict(r) for r in rows]
 
 
-def experiments_add_measurement(item: Dict):
+def experiment_ledger_add_measurement(item: Dict):
     with _conn() as con:
         cur = con.cursor()
         cur.execute(
@@ -583,13 +607,47 @@ def experiments_add_measurement(item: Dict):
         con.commit()
 
 
-def experiments_results() -> List[Dict]:
+def experiment_ledger_results() -> List[Dict]:
     with _conn() as con:
         con.row_factory = sqlite3.Row
         rows = con.execute(
-            "SELECT * FROM experiments WHERE success=1 OR status='completed' ORDER BY created_at DESC"
+            "SELECT * FROM experiment_ledger WHERE success=1 OR status='completed' ORDER BY created_at DESC"
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+# Member Timeline State CRUD
+def member_timeline_state_get(user_id: str) -> Dict:
+    with _conn() as con:
+        con.row_factory = sqlite3.Row
+        row = con.execute("SELECT * FROM member_timeline_state WHERE user_id=?", (user_id,)).fetchone()
+        if not row:
+            return {}
+        import json as _json
+        data = dict(row)
+        if data.get("state_json"):
+            try:
+                data["state"] = _json.loads(data["state_json"])  # type: ignore[assignment]
+            except Exception:
+                data["state"] = None
+        return data
+
+
+def member_timeline_state_set(user_id: str, state: Dict) -> bool:
+    import json as _json
+    now = __import__("datetime").datetime.now().isoformat()
+    with _conn() as con:
+        cur = con.cursor()
+        cur.execute(
+            """
+            INSERT INTO member_timeline_state (user_id, state_json, created_at, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET state_json=excluded.state_json, updated_at=excluded.updated_at
+            """,
+            (user_id, _json.dumps(state), now, now),
+        )
+        con.commit()
+        return cur.rowcount > 0
 
 
 # User profile CRUD

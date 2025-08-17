@@ -30,3 +30,23 @@ class JourneyState:
     nutrition_plan: Dict
 
 
+@dataclass
+class MemberTimelineState:
+    plan_version: str
+    active_protocols: List[str]
+    adherence_markers: Dict[str, float]
+    travel_windows: List[Dict[str, str]]
+    chronic_condition: str
+    upcoming_diagnostics: List[str]
+    residence: str
+
+
+@dataclass
+class ExperimentLedger:
+    id: str
+    hypothesis: str
+    intervention: str
+    measurement: str  # Objective/subjective
+    result: str
+    decision: str  # Progress/hold/pivot
+    plan_section_updated: str
