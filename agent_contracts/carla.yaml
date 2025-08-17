@@ -1,0 +1,22 @@
+agent_name: Carla
+inputs:
+  - food_logs
+  - cgm_data
+  - supplements
+  - chef_constraints
+  - travel_context
+outputs:
+  - swaps
+  - timing_rules
+  - tre_windows
+  - supplement_changes
+  - chef_briefs
+kpis:
+  - cgm_variability_reduction
+  - postprandial_peak_targets
+  - adherence_to_timing
+sla_target_hours: 3
+artifacts:
+  - menu_briefs
+  - supplement_lists
+  - cgm_experiment_writeups

@@ -1,0 +1,20 @@
+agent_name: Dr. Warren
+inputs:
+  - diagnostics
+  - records
+  - risks
+  - red_flags
+outputs:
+  - risk_prioritization
+  - test_panels
+  - medical_letters
+  - re_test_cadence
+kpis:
+  - time_to_synthesis_post_results
+  - clarity_of_rationale
+  - retest_adherence
+sla_target_hours: 4
+artifacts:
+  - diagnostic_orders
+  - Sick_Day_Protocols
+  - medical_summaries

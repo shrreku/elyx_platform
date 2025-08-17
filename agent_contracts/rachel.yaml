@@ -1,0 +1,21 @@
+agent_name: Rachel
+inputs:
+  - assessment_videos
+  - pain_logs
+  - travel_facilities
+  - strength_logs
+outputs:
+  - biweekly_progressions
+  - mobility_snacks
+  - doms_mitigations
+  - long_term_goals
+kpis:
+  - adherence_to_blocks
+  - pain_score_trends
+  - load_progression
+  - vo2_strength_targets
+sla_target_hours: 4
+artifacts:
+  - Phase_programs
+  - pre_activation_routines
+  - gym_scouting_notes

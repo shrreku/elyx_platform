@@ -1,3 +1,5 @@
+import os
+import yaml
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from dataclasses import dataclass
@@ -10,62 +12,6 @@ class UrgencyLevel(Enum):
     MEDIUM = 2  
     HIGH = 3
     CRITICAL = 4
-
-
-@dataclass
-class AgentRole:
-    name: str
-    responsibilities: List[str]
-    response_style: str
-    sla_target_hours: int
-    escalation_threshold_hours: int
-
-
-# Enhanced agent definitions with SLA tracking
-AGENT_ROLES = {
-    "Ruby": AgentRole(
-        name="Ruby",
-        responsibilities=["logistics", "scheduling", "coordination", "friction_removal", "primary_contact"],
-        response_style="empathetic, organized, proactive, anticipates needs",
-        sla_target_hours=1,  # Fastest response for logistics
-        escalation_threshold_hours=3
-    ),
-    "Dr. Warren": AgentRole(
-        name="Dr. Warren", 
-        responsibilities=["medical_decisions", "lab_interpretation", "clinical_strategy", "diagnostic_approval"],
-        response_style="authoritative, precise, scientific, clear explanations",
-        sla_target_hours=4,
-        escalation_threshold_hours=8
-    ),
-    "Advik": AgentRole(
-        name="Advik",
-        responsibilities=["wearable_data", "sleep_analysis", "hrv_monitoring", "performance_optimization", "data_experiments"],
-        response_style="analytical, curious, pattern-oriented, experimental mindset", 
-        sla_target_hours=3,
-        escalation_threshold_hours=6
-    ),
-    "Carla": AgentRole(
-        name="Carla",
-        responsibilities=["nutrition_planning", "cgm_analysis", "supplement_recommendations", "fuel_pillar", "behavioral_change"],
-        response_style="practical, educational, behavior-focused, explains why",
-        sla_target_hours=3,
-        escalation_threshold_hours=6
-    ),
-    "Rachel": AgentRole(
-        name="Rachel",
-        responsibilities=["movement_quality", "strength_programming", "injury_prevention", "chassis_pillar", "physical_structure"],
-        response_style="direct, encouraging, form-focused, function-oriented",
-        sla_target_hours=4,
-        escalation_threshold_hours=8
-    ),
-    "Neel": AgentRole(
-        name="Neel",
-        responsibilities=["strategic_reviews", "escalations", "relationship_management", "big_picture", "value_reinforcement"],
-        response_style="strategic, reassuring, big-picture, context-provider",
-        sla_target_hours=6,
-        escalation_threshold_hours=12
-    )
-}
 
 
 class RubyAgent(BaseAgent):
@@ -269,51 +215,67 @@ class UrgencyDetector:
 
 class AgentOrchestrator:
     """Simplified agent orchestration with SLA tracking"""
-    
+
     def __init__(self):
         self.agents = {
             "Ruby": RubyAgent(),
-            "Dr. Warren": DrWarrenAgent(), 
+            "Dr. Warren": DrWarrenAgent(),
             "Advik": AdvikAgent(),
             "Carla": CarlaAgent(),
             "Rachel": RachelAgent(),
             "Neel": NeelAgent(),
         }
         self.active_assignments: Dict[str, Dict] = {}
-    
+        self.contracts = self._load_contracts()
+        self._validate_contracts()
+
+    def _load_contracts(self):
+        contracts = {}
+        contracts_dir = "agent_contracts"
+        for filename in os.listdir(contracts_dir):
+            if filename.endswith(".yaml"):
+                filepath = os.path.join(contracts_dir, filename)
+                with open(filepath, "r") as f:
+                    contract = yaml.safe_load(f)
+                    agent_name = contract.get("agent_name")
+                    if agent_name:
+                        contracts[agent_name] = contract
+        return contracts
+
+    def _validate_contracts(self):
+        required_keys = ["agent_name", "inputs", "outputs", "kpis", "artifacts", "sla_target_hours"]
+        for agent_name, contract in self.contracts.items():
+            missing_keys = [key for key in required_keys if key not in contract]
+            if missing_keys:
+                raise ValueError(f"Contract for agent '{agent_name}' is missing keys: {', '.join(missing_keys)}")
+
     def route_message(self, message: str, context: Optional[Dict] = None) -> List[str]:
         """Route message to appropriate agents based on content"""
         message_lower = message.lower()
         agents = []
-        
-        # Always include Ruby for logistics unless clearly medical/technical
-        if any(word in message_lower for word in ["schedule", "appointment", "coordinate", "book", "confirm"]):
-            agents.append("Ruby")
-        
-        # Medical keywords -> Dr. Warren
-        if any(word in message_lower for word in ["lab", "blood", "test", "result", "medical", "doctor", "medication", "diagnosis"]):
-            agents.append("Dr. Warren")
-        
-        # Performance/wearable keywords -> Advik  
-        if any(word in message_lower for word in ["whoop", "oura", "hrv", "sleep", "recovery", "exercise", "workout", "performance"]):
-            agents.append("Advik")
-        
-        # Nutrition keywords -> Carla
-        if any(word in message_lower for word in ["food", "meal", "cgm", "glucose", "nutrition", "supplement", "diet", "eating"]):
-            agents.append("Carla")
-        
-        # Movement keywords -> Rachel
-        if any(word in message_lower for word in ["pain", "injury", "movement", "strength", "mobility", "physio", "exercise", "workout"]):
-            agents.append("Rachel")
-        
-        # Escalation keywords -> Neel
-        if any(word in message_lower for word in ["dissatisfied", "complaint", "frustrated", "escalate", "disappointed", "strategic", "goals"]):
-            agents.append("Neel")
-        
+
+        keyword_to_agent = {
+            "schedule": "Ruby", "appointment": "Ruby", "coordinate": "Ruby", "book": "Ruby", "confirm": "Ruby",
+            "lab": "Dr. Warren", "blood": "Dr. Warren", "test": "Dr. Warren", "result": "Dr. Warren",
+            "medical": "Dr. Warren", "doctor": "Dr. Warren", "medication": "Dr. Warren", "diagnosis": "Dr. Warren",
+            "whoop": "Advik", "oura": "Advik", "hrv": "Advik", "sleep": "Advik", "recovery": "Advik",
+            "exercise": "Advik", "workout": "Advik", "performance": "Advik",
+            "food": "Carla", "meal": "Carla", "cgm": "Carla", "glucose": "Carla", "nutrition": "Carla",
+            "supplement": "Carla", "diet": "Carla", "eating": "Carla",
+            "pain": "Rachel", "injury": "Rachel", "movement": "Rachel", "strength": "Rachel", "mobility": "Rachel",
+            "physio": "Rachel",
+            "dissatisfied": "Neel", "complaint": "Neel", "frustrated": "Neel", "escalate": "Neel",
+            "disappointed": "Neel", "strategic": "Neel", "goals": "Neel",
+        }
+
+        for keyword, agent in keyword_to_agent.items():
+            if keyword in message_lower:
+                agents.append(agent)
+
         # Default to Ruby if no specific routing
         if not agents:
             agents.append("Ruby")
-        
+
         # Remove duplicates while preserving order
         seen = set()
         result = []
@@ -321,14 +283,17 @@ class AgentOrchestrator:
             if agent not in seen:
                 seen.add(agent)
                 result.append(agent)
-        
+
         return result[:2]  # Limit to 2 agents max
-    
+
     def calculate_sla_deadline(self, urgency: UrgencyLevel, agent_name: str) -> datetime:
         """Calculate SLA deadline based on urgency and agent role"""
-        role = AGENT_ROLES[agent_name]
-        base_hours = role.sla_target_hours
-        
+        contract = self.contracts.get(agent_name)
+        if not contract:
+            raise ValueError(f"No contract found for agent: {agent_name}")
+
+        base_hours = contract["sla_target_hours"]
+
         # Adjust based on urgency
         if urgency == UrgencyLevel.CRITICAL:
             hours = 0.5  # 30 minutes
@@ -338,7 +303,7 @@ class AgentOrchestrator:
             hours = base_hours
         else:  # LOW
             hours = base_hours * 1.5
-        
+
         return datetime.now() + timedelta(hours=hours)
     
     def get_agent_performance(self, agent_name: str) -> Dict:

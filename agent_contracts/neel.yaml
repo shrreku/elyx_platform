@@ -1,0 +1,18 @@
+agent_name: Neel
+inputs:
+  - escalations
+  - dissatisfaction
+  - quarter_rollups
+outputs:
+  - qbr_agendas_recaps
+  - reframes
+  - north_star_kpis
+  - next_quarter_focus
+kpis:
+  - satisfaction_reductions_in_escalations
+  - on_time_qbrs
+  - kpi_clarity
+sla_target_hours: 6
+artifacts:
+  - qbr_deck_notes
+  - progress_reports

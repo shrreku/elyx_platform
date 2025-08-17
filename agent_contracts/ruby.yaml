@@ -1,0 +1,21 @@
+agent_name: Ruby
+inputs:
+  - member_intents
+  - logistics_needs
+  - plan_deltas
+  - scheduling_constraints
+outputs:
+  - calendar_events
+  - confirmations
+  - summaries
+  - weekly_monthly_quarterly_reports
+kpis:
+  - response_sla
+  - friction_removals
+  - scheduling_success
+  - travel_readiness
+sla_target_hours: 1
+artifacts:
+  - "Plan vX.Y update notes"
+  - protocol_pdfs
+  - appointment_confirmations
