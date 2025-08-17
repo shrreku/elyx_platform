@@ -1,6 +1,7 @@
 import random
 from typing import Dict, List
 
+from data.models import DiagnosticPanel, MicroReplan
 from data.persistence import PersistenceManager
 from agents.group_chat import GroupChatSystem
 
@@ -11,6 +12,12 @@ class JourneyOrchestrator:
         self.chat_system = GroupChatSystem()
         self.current_state = self.persistence.load_journey_state()
 
+        # Handle migration for old state files
+        if "diagnostic_panels" not in self.current_state:
+            self.current_state["diagnostic_panels"] = []
+        if "micro_replans" not in self.current_state:
+            self.current_state["micro_replans"] = []
+
     def simulate_week(self, week: int) -> Dict:
         print(f"=== Simulating Week {week} ===")
 
@@ -18,6 +25,10 @@ class JourneyOrchestrator:
         user_messages = self.generate_user_messages(week, events)
 
         weekly_conversations: List[Dict] = []
+
+        if "quarterly_diagnostic_test" in events:
+            self._handle_diagnostic_panel(week, weekly_conversations)
+
         for message in user_messages:
             context = {"week": week, "events": events}
             conversation = self.chat_system.send_message("Rohan", message, context)
@@ -28,8 +39,78 @@ class JourneyOrchestrator:
 
         self.persistence.save_weekly_report(week, report)
         self.persistence.save_conversation_history(self.chat_system.conversation_history)
+        self.persistence.save_journey_state(self.current_state)
 
         return report
+
+    def _handle_diagnostic_panel(self, week: int, weekly_conversations: List[Dict]):
+        # 1. Pre-check window
+        weekly_conversations.append(
+            {
+                "sender": "Ruby",
+                "message": f"Hi Rohan, it's time for your quarterly check-in. I'll be scheduling your blood panel for next week. I'll send over the details shortly.",
+            }
+        )
+
+        # 2. Schedule phlebotomy with fasting guidance
+        weekly_conversations.append(
+            {
+                "sender": "Ruby",
+                "message": "Your phlebotomy appointment is scheduled for next Tuesday at 8 AM. Please remember to fast for 12 hours prior. No food or drink other than water.",
+            }
+        )
+
+        # 3. On result arrival, auto-trigger Dr. Warren synthesis playbook
+        results = self._simulate_lab_results(week)
+        previous_panels = self.current_state["diagnostic_panels"]
+        delta = {}
+        if previous_panels:
+            delta = self._calculate_delta(results, previous_panels[-1]["results"])
+
+        panel = DiagnosticPanel(week=week, results=results, delta=delta)
+        self.current_state["diagnostic_panels"].append(panel.__dict__)
+
+        dr_warren_summary = f"Hi Rohan, your lab results are in. Overall, we're seeing some great progress. Your A1C is down to {results['A1C']}, and your triglycerides are {results['Triglycerides']}. The main area to focus on is {results['Focus Area']}. I'll loop in the team with some recommendations."
+        weekly_conversations.append({"sender": "Dr. Warren", "message": dr_warren_summary})
+
+        # 4. Create “delta” view against last panel; assign action items to Carla/Rachel/Advik; plan retest window.
+        weekly_conversations.append(
+            {
+                "sender": "Dr. Warren",
+                "message": "Team, here are the latest results. Please provide your recommendations. Carla, let's focus on nutrition to address the triglycerides. Rachel, please update Rohan's strength training plan. Advik, please check his latest wearable data for any correlations.",
+            }
+        )
+        weekly_conversations.append({"sender": "Carla", "message": "Got it. I'll send over some meal plan adjustments."})
+        weekly_conversations.append(
+            {"sender": "Rachel", "message": "Understood. I'll add a new workout to his plan for next week."}
+        )
+        weekly_conversations.append(
+            {"sender": "Advik", "message": "On it. I'll analyze his latest sleep and HRV data."}
+        )
+
+    def _simulate_lab_results(self, week: int) -> Dict[str, str]:
+        # Simulate improvement over time
+        a1c = 6.2 - (week * 0.03)
+        triglycerides = 150 - (week * 1.5)
+        return {
+            "A1C": f"{a1c:.2f}",
+            "Triglycerides": f"{triglycerides:.0f}",
+            "Vitamin D": f"{random.randint(25, 45)}",
+            "Focus Area": random.choice(["LDL Cholesterol", "Inflammation (hs-CRP)"]),
+        }
+
+    def _calculate_delta(self, current_results: Dict, previous_results: Dict) -> Dict:
+        delta = {}
+        for key, value in current_results.items():
+            if key in previous_results:
+                try:
+                    current_val = float(value)
+                    previous_val = float(previous_results[key])
+                    change = current_val - previous_val
+                    delta[key] = f"{change:+.2f}"
+                except ValueError:
+                    delta[key] = "N/A"
+        return delta
 
     def generate_weekly_events(self, week: int) -> List[str]:
         events: List[str] = []
@@ -68,7 +149,11 @@ class JourneyOrchestrator:
         return messages
 
     def generate_weekly_report(self, week: int, events: List[str], conversations: List[Dict]) -> Dict:
-        adherence = random.choice([0.3, 0.5, 0.7, 0.8])
+        adherence = self._calculate_adherence(events)
+
+        if adherence < 0.6:
+            self._generate_micro_replan(week, adherence, conversations)
+
         blood_sugar_improvement = max(0, (week - 1) * 2)
         return {
             "week": week,
@@ -86,6 +171,36 @@ class JourneyOrchestrator:
             },
             "recommendations": self.extract_recommendations(conversations),
         }
+
+    def _calculate_adherence(self, events: List[str]) -> float:
+        base_adherence = 0.85
+        if "business_travel" in events:
+            base_adherence -= 0.2
+        if "leg_injury_reported" in events:
+            base_adherence -= 0.3
+        # Add some randomness to simulate real life
+        base_adherence -= random.uniform(0, 0.15)
+        return max(0, base_adherence)
+
+    def _generate_micro_replan(self, week: int, adherence: float, weekly_conversations: List[Dict]):
+        plan_version = f"v{week}.{len(self.current_state['micro_replans']) + 1}"
+        reason = f"Detected low adherence ({adherence:.0%}) this week."
+        changes = [
+            "Shorter duration workouts (20-30 mins).",
+            "Swap evening workout for a morning walk.",
+            "Focus on recovery: 10 mins of stretching before bed.",
+        ]
+
+        replan = MicroReplan(week=week, version=plan_version, reason=reason, changes=changes)
+        self.current_state["micro_replans"].append(replan.__dict__)
+
+        message = (
+            f"Hi Rohan, I noticed things were a bit hectic this week. No problem at all, that's completely normal. "
+            f"Let's adjust the plan to make it more manageable. Here's a micro-replan for the coming week ({plan_version}):\n\n"
+            f"- {changes[0]}\n- {changes[1]}\n- {changes[2]}\n\n"
+            f"Let's focus on consistency, not intensity. How does this sound?"
+        )
+        weekly_conversations.append({"sender": "Neel", "message": message})
 
     def extract_recommendations(self, conversations: List[Dict]) -> List[str]:
         recommendations: List[str] = []
