@@ -1,7 +1,7 @@
 import os
 import json
-from typing import List, Dict
-
+from typing import List, Dict, Optional
+import jsonschema
 import requests
 from dotenv import load_dotenv
 
@@ -10,10 +10,11 @@ load_dotenv()
 
 
 class BaseAgent:
-    def __init__(self, name: str, role: str, system_prompt: str):
+    def __init__(self, name: str, role: str, system_prompt: str, schema: Optional[Dict] = None):
         self.name = name
         self.role = role
         self.system_prompt = system_prompt
+        self.schema = schema
         self.conversation_history: List[Dict] = []
 
     def _should_use_mock(self) -> bool:
@@ -74,7 +75,25 @@ class BaseAgent:
         if context:
             messages.insert(1, {"role": "system", "content": f"Context: {json.dumps(context)}"})
 
-        response = self.call_openrouter(messages)
-        self.conversation_history.append({"user": user_message, "assistant": response})
-        return response
+        for i in range(3):  # Retry up to 3 times
+            response_text = self.call_openrouter(messages)
+            try:
+                # Attempt to extract a valid JSON object from the response
+                json_part = response_text[response_text.find('{'):response_text.rfind('}')+1]
+                response_json = json.loads(json_part)
+
+                if self.schema:
+                    jsonschema.validate(instance=response_json, schema=self.schema)
+
+                self.conversation_history.append({"user": user_message, "assistant": json.dumps(response_json)})
+                return json.dumps(response_json)
+            except (json.JSONDecodeError, jsonschema.ValidationError) as e:
+                error_message = f"Attempt {i+1} failed: Invalid JSON or schema validation error: {e}\nResponse: {response_text}"
+                messages.append({"role": "system", "content": error_message})
+                continue
+
+        # If all retries fail, return an error message
+        final_error = "Failed to get a valid JSON response after multiple retries."
+        self.conversation_history.append({"user": user_message, "assistant": final_error})
+        return final_error
 
