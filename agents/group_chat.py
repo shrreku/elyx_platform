@@ -1,7 +1,9 @@
 import json
 from typing import List, Dict
 from .elyx_agents import *
+from .llm_router import LLMRouter
 from .travel_protocol import generate_travel_protocol, extract_travel_details_with_llm
+from monitoring.observability import track_routing_decision
 
 class GroupChatSystem:
     def __init__(self):
@@ -15,6 +17,7 @@ class GroupChatSystem:
             "Rohan": RohanAgent()
         }
         self.conversation_history = []
+        self.router = LLMRouter()
 
     def send_message(self, sender: str, message: str, context: Dict = None):
         # Handle event injection
@@ -46,7 +49,18 @@ class GroupChatSystem:
         responses = {}
 
         # Determine which agents should respond based on keywords
-        responding_agents = self.determine_responding_agents(message)
+        responding_agents = self.router.route(message, context)
+
+        # Log the routing decision
+        track_routing_decision(
+            message=message,
+            chosen_intent="inferred_intent",  # Placeholder
+            selected_playbook="inferred_playbook",  # Placeholder
+            involved_agents=responding_agents,
+            prompts_used=self.router._build_route_prompt(message, context),
+            artifacts_written={},  # Placeholder
+            calendar_updates=[],  # Placeholder
+        )
 
         # Generate travel protocol if needed
         if any(word in message.lower() for word in ["travel", "trip", "fly"]):
@@ -64,39 +78,6 @@ class GroupChatSystem:
                 responses[agent_name] = f"Error: {str(e)}"
 
         return responses
-
-    def determine_responding_agents(self, message: str) -> List[str]:
-        message_lower = message.lower()
-        responding = []
-
-        # Ruby always coordinates
-        responding.append("Ruby")
-
-        # Medical keywords
-        if any(word in message_lower for word in ["blood sugar", "test", "medication", "report"]):
-            responding.append("Dr. Warren")
-
-        # Nutrition keywords
-        if any(word in message_lower for word in ["diet", "nutrition", "food", "snack"]):
-            responding.append("Carla")
-
-        # Exercise keywords
-        if any(word in message_lower for word in ["exercise", "workout", "sleep", "wearable"]):
-            responding.append("Advik")
-
-        # Injury keywords
-        if any(word in message_lower for word in ["injury", "pain", "mobility", "rehab"]):
-            responding.append("Rachel")
-
-        # Strategic keywords
-        if any(word in message_lower for word in ["frustrated", "progress", "plan", "goals"]):
-            responding.append("Neel")
-
-        # Travel keywords
-        if any(word in message_lower for word in ["travel", "trip", "fly"]):
-            responding.extend(["Advik", "Carla", "Rachel"])
-
-        return list(set(responding))  # Remove duplicates
 
     def handle_event_injection(self, message: str) -> bool:
         if "@inject" in message.lower():

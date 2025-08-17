@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Dict, Optional, List
 
 from fastapi import FastAPI
@@ -177,6 +178,27 @@ class ExperimentMeasurementIn(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "model": os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-exp:free")}
+
+
+@app.get("/traces")
+def get_traces():
+    try:
+        with open("../monitoring/traces.json", "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+@app.get("/health-metrics")
+def get_health_metrics():
+    reports = []
+    for i in range(1, 35):
+        try:
+            with open(f"../data/weekly_reports/{i}.json", "r") as f:
+                reports.append(json.load(f))
+        except FileNotFoundError:
+            break
+    return reports
 
 
 @app.get("/debug/config")
@@ -953,4 +975,3 @@ def api_generate_mock_data():
     except Exception as e:
         logging.error(f"Error generating mock data: {e}")
         return {"success": False, "error": str(e)}
-

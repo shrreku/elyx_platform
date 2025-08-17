@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 type Message = {
 	sender: string;
@@ -80,6 +81,9 @@ export default function ElyxDashboard() {
 	const [episodes, setEpisodes] = useState<Episode[]>([]);
 	const [decisions, setDecisions] = useState<Decision[]>([]);
 	const [experiments, setExperiments] = useState<Experiment[]>([]);
+	const [healthMetrics, setHealthMetrics] = useState<any[]>([]);
+	const [agentPerformance, setAgentPerformance] = useState<any>({});
+	const [traces, setTraces] = useState<any[]>([]);
 
 	// UI states
 	const [inputMessage, setInputMessage] = useState("");
@@ -118,13 +122,16 @@ export default function ElyxDashboard() {
 	// Load all data
 	const refreshAll = async () => {
 		try {
-			const [messagesRes, suggestionsRes, issuesRes, episodesRes, decisionsRes, experimentsRes] = await Promise.all([
+			const [messagesRes, suggestionsRes, issuesRes, episodesRes, decisionsRes, experimentsRes, healthMetricsRes, agentPerformanceRes, tracesRes] = await Promise.all([
 				fetch(`${backendBase}/messages`),
 				fetch(`${backendBase}/suggestions`),
 				fetch(`${backendBase}/issues`),
 				fetch(`${backendBase}/episodes`),
 				fetch(`${backendBase}/decisions`),
-				fetch(`${backendBase}/experiments`)
+				fetch(`${backendBase}/experiments`),
+				fetch(`${backendBase}/health-metrics`),
+				fetch(`${backendBase}/agents/performance`),
+				fetch(`${backendBase}/traces`)
 			]);
 
 			if (messagesRes.ok) {
@@ -150,6 +157,18 @@ export default function ElyxDashboard() {
 			if (experimentsRes.ok) {
 				const data = await experimentsRes.json();
 				setExperiments(data as Experiment[]);
+			}
+			if (healthMetricsRes.ok) {
+				const data = await healthMetricsRes.json();
+				setHealthMetrics(data);
+			}
+			if (agentPerformanceRes.ok) {
+				const data = await agentPerformanceRes.json();
+				setAgentPerformance(data);
+			}
+			if (tracesRes.ok) {
+				const data = await tracesRes.json();
+				setTraces(data);
 			}
 		} catch (error) {
 			console.error('Error loading data:', error);
@@ -855,6 +874,27 @@ export default function ElyxDashboard() {
 									</div>
 								</div>
 				</div>
+				{/* Trace Viewer */}
+				<div className="card lg:col-span-2">
+					<div className="card-header">
+						<h3 className="card-title">Trace Viewer</h3>
+					</div>
+					<div className="space-y-3 max-h-96 overflow-y-auto">
+						{traces.map((trace, i) => (
+							<div key={i} className="p-4 border border-gray-200 rounded-lg">
+								<div className="flex items-start justify-between mb-2">
+									<h4 className="font-medium text-sm">{trace.message}</h4>
+								</div>
+								<pre className="text-xs bg-gray-100 p-2 rounded">
+									{JSON.stringify(trace, null, 2)}
+								</pre>
+							</div>
+						))}
+						{traces.length === 0 && (
+							<p className="text-sm text-gray-500 text-center py-8">No traces found.</p>
+						)}
+					</div>
+				</div>
 				</div>
 				</div>
 				)}
@@ -865,21 +905,57 @@ export default function ElyxDashboard() {
 						<h2 className="text-2xl font-bold mb-6">Analytics & Insights</h2>
 						
 						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							{/* Health Metrics */}
+							<div className="card">
+								<div className="card-header">
+									<h3 className="card-title">Blood Sugar Trend</h3>
+								</div>
+								<ResponsiveContainer width="100%" height={300}>
+									<LineChart data={healthMetrics}>
+										<CartesianGrid strokeDasharray="3 3" />
+										<XAxis dataKey="week" />
+										<YAxis />
+										<Tooltip />
+										<Legend />
+										<Line type="monotone" dataKey="health_metrics.blood_sugar_avg" stroke="#8884d8" name="Blood Sugar Avg" />
+									</LineChart>
+								</ResponsiveContainer>
+							</div>
+
+							<div className="card">
+								<div className="card-header">
+									<h3 className="card-title">A1C Improvement</h3>
+								</div>
+								<ResponsiveContainer width="100%" height={300}>
+									<LineChart data={healthMetrics}>
+										<CartesianGrid strokeDasharray="3 3" />
+										<XAxis dataKey="week" />
+										<YAxis />
+										<Tooltip />
+										<Legend />
+										<Line type="monotone" dataKey="health_metrics.a1c" stroke="#82ca9d" name="A1C" />
+									</LineChart>
+								</ResponsiveContainer>
+							</div>
+
 							{/* Agent Performance */}
 							<div className="card">
 								<div className="card-header">
-									<h3 className="card-title">Agent Activity</h3>
+									<h3 className="card-title">Agent Performance</h3>
 								</div>
 								<div className="space-y-3">
-									{['Ruby', 'Dr. Warren', 'Advik', 'Carla', 'Rachel', 'Neel'].map((agent) => {
-										const agentSuggestions = suggestions.filter(s => s.agent === agent).length;
-										return (
-											<div key={agent} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+									{Object.entries(agentPerformance).map(([agent, metrics]: [string, any]) => (
+										<div key={agent} className="p-3 bg-gray-50 rounded-lg">
+											<div className="flex items-center justify-between">
 												<span className="font-medium">{agent}</span>
-												<span className="text-sm text-gray-600">{agentSuggestions} suggestions</span>
+												<span className="text-sm text-gray-600">{metrics.suggestions_count} suggestions</span>
 											</div>
-										);
-									})}
+											<div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+												<span>Avg. Response: {metrics.avg_response_time_ms.toFixed(0)}ms</span>
+												<span>Satisfaction: {(metrics.satisfaction_score * 100).toFixed(0)}%</span>
+											</div>
+										</div>
+									))}
 								</div>
 							</div>
 
@@ -897,8 +973,8 @@ export default function ElyxDashboard() {
 												<span className="font-medium capitalize">{category}</span>
 												<div className="flex items-center gap-2">
 													<div className="w-20 bg-gray-200 rounded-full h-2">
-														<div 
-															className="bg-blue-500 h-2 rounded-full" 
+														<div
+															className="bg-blue-500 h-2 rounded-full"
 															style={{width: `${percentage}%`}}
 														></div>
 													</div>
@@ -909,7 +985,6 @@ export default function ElyxDashboard() {
 									})}
 								</div>
 							</div>
-
 							{/* Status Distribution */}
 							<div className="card lg:col-span-2">
 								<div className="card-header">
