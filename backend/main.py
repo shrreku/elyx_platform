@@ -10,10 +10,6 @@ from agents.elyx_agents import AgentOrchestrator, UrgencyDetector, AGENT_ROLES
 from agents.llm_router import LLMRouter
 from agents.experiment_engine import ExperimentEngine
 from data.suggestions import SuggestionsStore
-try:
-    from agents.crewai_orchestrator import CrewOrchestrator
-except Exception:
-    CrewOrchestrator = None  # type: ignore[assignment]
 from data.persistence import PersistenceManager
 from data.db import (
     init_db,
@@ -64,7 +60,6 @@ app.add_middleware(
 
 agent_orchestrator = AgentOrchestrator()
 persistence = PersistenceManager()
-crewai_orchestrator = CrewOrchestrator() if CrewOrchestrator else None
 router = LLMRouter()
 experiment_engine = ExperimentEngine()
 issue_extractor = IssueExtractor()
@@ -81,7 +76,6 @@ class ChatRequest(BaseModel):
     sender: str
     message: str
     context: Optional[Dict] = None
-    use_crewai: bool = True
 
 
 class SuggestionIn(BaseModel):
@@ -251,11 +245,11 @@ def api_reset_soft():
 @app.post("/chat")
 def chat(req: ChatRequest):
     model_cfg = os.getenv("OPENROUTER_MODEL")
-    logging.info("/chat start use_crewai=%s model=%s msg=%s", req.use_crewai, model_cfg, req.message)
-    
+    logging.info("/chat start model=%s msg=%s", model_cfg, req.message)
+
     # Load conversation history
     conversation_history = persistence.load_conversation_history()
-    
+
     # Append user message
     conversation_history.append({
         "sender": req.sender,
@@ -281,138 +275,50 @@ def chat(req: ChatRequest):
         # Use simplified orchestrator for routing
         responding_agents = agent_orchestrator.route_message(req.message, req.context)
         logging.info("orchestrator selected agents=%s", responding_agents)
-        if req.use_crewai and crewai_orchestrator is not None:
-            for agent in responding_agents:
-                try:
-                    logging.info("crew_call agent=%s model=%s", agent, getattr(crewai_orchestrator, "model", None))
-                    response = crewai_orchestrator.ask(agent, req.message, req.context)
-                    conversation_history.append({
-                        "sender": agent, 
-                        "message": response, 
-                        "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                        "context": req.context
-                    })
-                    # Extract plans from agent response
-                    try:
-                        extracted = plan_extractor.extract(agent, response, req.context)
-                        if extracted:
-                            payload = []
-                            msg_idx = len(conversation_history) - 1
-                            msg_ts = conversation_history[-1].get("timestamp")
-                            for e in extracted:
-                                payload.append(
-                                    {
-                                        "id": os.urandom(8).hex(),
-                                        "user_id": "rohan",
-                                        "agent": agent,
-                                        "title": e.get("title"),
-                                        "details": e.get("details"),
-                                        "category": e.get("category"),
-                                        "status": "proposed",
-                                        "created_at": __import__("datetime").datetime.now().isoformat(),
-                                        "conversation_id": "default",
-                                        "message_index": msg_idx,
-                                        "message_timestamp": msg_ts,
-                                        "source": "llm",
-                                        "origin": "agent_reply",
-                                        "source_message": response,
-                                        "context_json": None,
-                                    }
-                                )
-                            suggestions_add_many(payload)
-                    except Exception as exc:  # noqa: BLE001
-                        logging.warning("plan_extractor failed: %s", exc)
-                except Exception as exc:  # noqa: BLE001
-                    # Fallback to internal BaseAgent for this specific agent
-                    try:
-                        logging.warning("crew_failed agent=%s err=%s; falling back to direct", agent, exc)
-                        fallback_response = agent_orchestrator.agents[agent].respond(req.message, req.context)
-                        conversation_history.append({
-                            "sender": agent, 
-                            "message": fallback_response, 
-                            "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                            "context": req.context
-                        })
-                        try:
-                            extracted = plan_extractor.extract(agent, fallback_response, req.context)
-                            if extracted:
-                                payload = []
-                                msg_idx = len(conversation_history) - 1
-                                msg_ts = conversation_history[-1].get("timestamp")
-                                for e in extracted:
-                                    payload.append(
-                                        {
-                                            "id": os.urandom(8).hex(),
-                                            "user_id": "rohan",
-                                            "agent": agent,
-                                            "title": e.get("title"),
-                                            "details": e.get("details"),
-                                            "category": e.get("category"),
-                                            "status": "proposed",
-                                            "created_at": __import__("datetime").datetime.now().isoformat(),
-                                            "conversation_id": "default",
-                                            "message_index": msg_idx,
-                                            "message_timestamp": msg_ts,
-                                            "source": "llm",
-                                            "origin": "agent_reply",
-                                            "source_message": fallback_response,
-                                            "context_json": None,
-                                        }
-                                    )
-                                suggestions_add_many(payload)
-                        except Exception as exc2:  # noqa: BLE001
-                            logging.warning("plan_extractor failed (fallback): %s", exc2)
-                    except Exception as inner_exc:  # noqa: BLE001
-                        conversation_history.append({
-                            "sender": agent, 
-                            "message": f"Error: {inner_exc}", 
-                            "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                            "context": req.context
-                        })
-        else:
-            # Use internal agent responses only for routed agents
-            for agent_name in responding_agents:
-                try:
-                    logging.info("direct_call agent=%s model=%s", agent_name, os.getenv("OPENROUTER_MODEL"))
-                    response = agent_orchestrator.agents[agent_name].respond(req.message, req.context)
-                except Exception as exc:  # noqa: BLE001
-                    response = f"Error: {exc}"
-                conversation_history.append({
-                    "sender": agent_name, 
-                    "message": response, 
-                    "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                    "context": req.context
-                })
-                # Extract plans from direct path
-                try:
-                    extracted = plan_extractor.extract(agent_name, response, req.context)
-                    if extracted:
-                        payload = []
-                        msg_idx = len(conversation_history) - 1
-                        msg_ts = conversation_history[-1].get("timestamp")
-                        for e in extracted:
-                            payload.append(
-                                {
-                                    "id": os.urandom(8).hex(),
-                                    "user_id": "rohan",
-                                    "agent": agent_name,
-                                    "title": e.get("title"),
-                                    "details": e.get("details"),
-                                    "category": e.get("category"),
-                                    "status": "proposed",
-                                    "created_at": __import__("datetime").datetime.now().isoformat(),
-                                    "conversation_id": "default",
-                                    "message_index": msg_idx,
-                                    "message_timestamp": msg_ts,
-                                    "source": "llm",
-                                    "origin": "agent_reply",
-                                    "source_message": response,
-                                    "context_json": None,
-                                }
-                            )
-                        suggestions_add_many(payload)
-                except Exception as exc:  # noqa: BLE001
-                    logging.warning("plan_extractor failed (direct): %s", exc)
+
+        # Use internal agent responses only for routed agents
+        for agent_name in responding_agents:
+            try:
+                logging.info("direct_call agent=%s model=%s", agent_name, os.getenv("OPENROUTER_MODEL"))
+                response = agent_orchestrator.agents[agent_name].respond(req.message, req.context)
+            except Exception as exc:  # noqa: BLE001
+                response = f"Error: {exc}"
+            conversation_history.append({
+                "sender": agent_name,
+                "message": response,
+                "timestamp": __import__("datetime").datetime.now().isoformat(),
+                "context": req.context
+            })
+            # Extract plans from direct path
+            try:
+                extracted = plan_extractor.extract(agent_name, response, req.context)
+                if extracted:
+                    payload = []
+                    msg_idx = len(conversation_history) - 1
+                    msg_ts = conversation_history[-1].get("timestamp")
+                    for e in extracted:
+                        payload.append(
+                            {
+                                "id": os.urandom(8).hex(),
+                                "user_id": "rohan",
+                                "agent": agent_name,
+                                "title": e.get("title"),
+                                "details": e.get("details"),
+                                "category": e.get("category"),
+                                "status": "proposed",
+                                "created_at": __import__("datetime").datetime.now().isoformat(),
+                                "conversation_id": "default",
+                                "message_index": msg_idx,
+                                "message_timestamp": msg_ts,
+                                "source": "llm",
+                                "origin": "agent_reply",
+                                "source_message": response,
+                                "context_json": None,
+                            }
+                        )
+                    suggestions_add_many(payload)
+            except Exception as exc:  # noqa: BLE001
+                logging.warning("plan_extractor failed (direct): %s", exc)
 
     # Extract issues from user's message and persist with reference
     issues = []
@@ -657,8 +563,6 @@ def set_model(req: ModelSetRequest):
     provider = os.getenv("OPENROUTER_PROVIDER", "")
     os.environ["OPENROUTER_MODEL"] = req.model
     os.environ["OPENAI_MODEL_NAME"] = req.model
-    if crewai_orchestrator is not None:
-        crewai_orchestrator.model = req.model
     return {"ok": True, "model": req.model, "provider": provider or None}
 
 
