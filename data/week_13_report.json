@@ -1,16 +1,19 @@
 {
   "week": 13,
   "events": [],
-  "conversations_count": 15,
-  "adherence_rate": 0.7,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Hi there! 🌟 I’m glad the tips were helpful. As you adjust your schedule, I’ll keep an eye on your calendar and nudging you with gentle reminders a day before each key milestone—flight check‑in, hotel arrival, and any pre‑departure appointments. Also, if you need a quick rundown of local transport options or want to lock in a pickup time, just let me know. I’ll ensure everything is aligned so you can enjoy a smooth, stress‑free journey. Safe travels! ✈️",
   "health_metrics": {
     "blood_sugar_avg": 156,
     "a1c": 5.94,
     "weight": 73.7
   },
   "agent_actions": {
-    "doctor_hours": 8,
-    "coach_hours": 16
+    "doctor_hours": 13,
+    "coach_hours": 13
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! 🌟 I’m glad the tips were helpful. As you adjust your schedule, I’ll keep an eye on your calendar and nudging you with gentle reminders a day before each key milestone—flight check‑in, hotel ..."
+  ]
 }

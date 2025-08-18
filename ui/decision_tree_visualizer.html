@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elyx Platform - Decision Tree Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .control-group select, .control-group input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .visualization-container {
+            padding: 30px;
+            min-height: 600px;
+            position: relative;
+        }
+
+        .decision-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .decision-level {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .decision-node {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px 20px;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .decision-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .decision-node.user {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .decision-node.agent {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        }
+
+        .decision-node.decision-point {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-width: 3px;
+        }
+
+        .node-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .node-content {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .node-meta {
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .arrow {
+            width: 2px;
+            height: 30px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+            position: relative;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -4px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 8px solid #764ba2;
+        }
+
+        .stats-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            background: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .filter-chip.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Added styles for divergence nodes and SVG connection overlay */
+        .divergence-node {
+            background: #fff7e6;
+            border: 1px dashed #ffc107;
+            color: #5a4a00;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            min-width: 160px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .svg-overlay {
+            position: absolute;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* Split node (explicit branching affordance) */
+        .split-node {
+            background: #eef6ff;
+            border: 1px solid #007bff;
+            color: #03396c;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            min-width: 160px;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .split-node .path {
+            display: block;
+            padding: 4px 6px;
+            margin: 3px 0;
+            background: rgba(0,123,255,0.06);
+            border-radius: 6px;
+            font-size: 12px;
+            color: #03396c;
+        }
+
+        /* Tooltip for hover previews */
+        .dt-tooltip {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            max-width: 360px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            line-height: 1.3;
+        }
+
+        /* Simple pan/zoom container */
+        .viz-viewport {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+        }
+
+        .viz-viewport.dragging {
+            cursor: grabbing;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 Elyx Platform Decision Tree Visualizer</h1>
+            <p>Interactive visualization of health coaching conversation flows and decision points</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="dataSource">Data Source:</label>
+                <select id="dataSource">
+                    <option value="demo">Demo Data</option>
+                    <option value="simulation" selected>Simulation Data</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="maxNodes">Max Nodes:</label>
+                <input type="number" id="maxNodes" value="20" min="5" max="100">
+            </div>
+
+            <div class="control-group">
+                <label for="minRecs">Min Recommendations:</label>
+                <input type="number" id="minRecs" value="1" min="0" max="10">
+            </div>
+
+            <div class="control-group">
+                <label for="flagQuestions">Flag Questions:</label>
+                <select id="flagQuestions">
+                    <option value="true">Yes</option>
+                    <option value="false" selected>No</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="filterDomain">Health Domain:</label>
+                <select id="filterDomain">
+                    <option value="all">All Domains</option>
+                    <option value="sleep">Sleep & Recovery</option>
+                    <option value="mental">Mental Health</option>
+                    <option value="exercise">Physical Activity</option>
+                    <option value="nutrition">Nutrition</option>
+                    <option value="medical">Medical Consultation</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="loadData()">🔄 Load Data</button>
+            <button class="btn" onclick="loadData(true)">🔄 Force Refresh</button>
+            <button class="btn" onclick="testDataConnection()">🧪 Test Connection</button>
+            <button class="btn" onclick="exportTree()">📊 Export Tree</button>
+            <button class="btn" onclick="exportCSV()">📄 Export CSV</button>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalMessages">-</div>
+                    <div class="stat-label">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="decisionPoints">-</div>
+                    <div class="stat-label">Decision Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="healthDomains">-</div>
+                    <div class="stat-label">Health Domains</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="simulationPeriod">-</div>
+                    <div class="stat-label">Simulation Period</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters" id="domainFilters">
+            <!-- Dynamic filter chips will be added here -->
+        </div>
+
+        <div class="visualization-container">
+            <div class="viz-viewport" id="vizViewport">
+                <div id="decisionTree" class="decision-tree">
+                    <div class="loading">Click "Load Data" to visualize the decision tree</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationData = null;
+        let decisionTree = null;
+
+        // Pan/zoom state for viz viewport
+        const vizState = {
+            scale: 1,
+            minScale: 0.5,
+            maxScale: 2.5,
+            offsetX: 0,
+            offsetY: 0,
+            isDragging: false,
+            dragStart: { x: 0, y: 0 },
+        };
+
+        // Create tooltip element (hidden initially)
+        const tooltip = document.createElement('div');
+        tooltip.className = 'dt-tooltip';
+        tooltip.style.display = 'none';
+        document.body.appendChild(tooltip);
+
+        function showTooltip(html, x, y) {
+            tooltip.innerHTML = html;
+            tooltip.style.display = 'block';
+            const pad = 12;
+            const rect = tooltip.getBoundingClientRect();
+            // prefer to show slightly below/right of cursor but keep on screen
+            let left = x + 12;
+            let top = y + 12;
+            if (left + rect.width + pad > window.innerWidth) left = x - rect.width - 12;
+            if (top + rect.height + pad > window.innerHeight) top = y - rect.height - 12;
+            tooltip.style.left = `${Math.max(8, left)}px`;
+            tooltip.style.top = `${Math.max(8, top)}px`;
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        // Setup pan/zoom handlers
+        function setupPanZoom() {
+            const viewport = document.getElementById('vizViewport');
+            const tree = document.getElementById('decisionTree');
+            if (!viewport || !tree) return;
+
+            function applyTransform() {
+                tree.style.transform = `translate(${vizState.offsetX}px, ${vizState.offsetY}px) scale(${vizState.scale})`;
+            }
+
+            // Wheel to zoom (Ctrl/Meta or plain wheel)
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = -e.deltaY;
+                const zoomFactor = delta > 0 ? 1.08 : 0.92;
+                const oldScale = vizState.scale;
+                vizState.scale = Math.min(vizState.maxScale, Math.max(vizState.minScale, vizState.scale * zoomFactor));
+
+                // Zoom towards cursor: adjust offsets so the point under cursor remains stable
+                const rect = tree.getBoundingClientRect();
+                const cursorX = e.clientX - rect.left;
+                const cursorY = e.clientY - rect.top;
+
+                vizState.offsetX -= (cursorX / oldScale) * (vizState.scale / oldScale - 1);
+                vizState.offsetY -= (cursorY / oldScale) * (vizState.scale / oldScale - 1);
+
+                applyTransform();
+            }, { passive: false });
+
+            // Drag to pan
+            viewport.addEventListener('mousedown', (e) => {
+                vizState.isDragging = true;
+                viewport.classList.add('dragging');
+                vizState.dragStart.x = e.clientX - vizState.offsetX;
+                vizState.dragStart.y = e.clientY - vizState.offsetY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!vizState.isDragging) return;
+                vizState.offsetX = e.clientX - vizState.dragStart.x;
+                vizState.offsetY = e.clientY - vizState.dragStart.y;
+                applyTransform();
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!vizState.isDragging) return;
+                vizState.isDragging = false;
+                viewport.classList.remove('dragging');
+            });
+        }
+
+        // Transform simulation data to match expected format
+        function transformSimulationData(rawData) {
+            console.log('Raw data received:', rawData);
+            
+            if (!rawData || !rawData.conversation_history || !Array.isArray(rawData.conversation_history)) {
+                console.warn('Raw data is not in expected format:', rawData);
+                return demoData; // Fallback to demo data
+            }
+
+            const transformedData = {
+                total_messages: rawData.total_messages || rawData.conversation_history.length,
+                simulation_period: rawData.simulation_period || `${rawData.conversation_history.length} days`,
+                conversation_history: rawData.conversation_history.map((entry, index) => {
+                    // Handle the NEW format from your updated backend
+                    const message = entry.Message || entry.message || 'No message content';
+                    const sender = entry.Sender || entry.sender || 'Unknown';
+                    const date = entry.Date || entry.date || '2025-01-01';
+                    const time = entry.Time || entry.time || '09:00:00';
+                    const day = entry.Day || Math.floor(index / 2) + 1; // Use provided Day or calculate
+                    
+                    // Determine message type and reply needed
+                    let messageType = 'User_Initial';
+                    let replyNeeded = false;
+                    let recommendations = [];
+                    
+                    if (sender.toLowerCase().includes('rohan') || sender.toLowerCase().includes('user')) {
+                        messageType = 'User_Initial';
+                        replyNeeded = true;
+                    } else {
+                        messageType = 'Agent_Response';
+                        replyNeeded = false;
+                        // Extract recommendations from agent responses
+                        if (message.toLowerCase().includes('recommend') || 
+                            message.toLowerCase().includes('suggest') ||
+                            message.toLowerCase().includes('try') ||
+                            message.toLowerCase().includes('schedule') ||
+                            message.toLowerCase().includes('book')) {
+                            recommendations = ['health recommendation'];
+                        }
+                    }
+                    
+                    return {
+                        "S.No.": entry["S.No."] || index + 1,
+                        "Message": message,
+                        "Sender": sender,
+                        "Date": date,
+                        "Time": time,
+                        "Day": day,
+                        "Reply_Needed": replyNeeded,
+                        "Recommendations": recommendations,
+                        "Message_Type": messageType
+                    };
+                })
+            };
+            
+            console.log('Transformed simulation data:', transformedData);
+            return transformedData;
+        }
+
+        // Demo data for testing
+        const demoData = {
+            total_messages: 12,
+            simulation_period: "3 days",
+            conversation_history: [
+                {
+                    "S.No.": 1,
+                    "Message": "I need help with my sleep schedule",
+                    "Sender": "User",
+                    "Date": "2025-01-01",
+                    "Time": "09:00:00",
+                    "Day": 1,
+                    "Reply_Needed": true,
+                    "Recommendations": ["sleep hygiene", "reduce screen time"],
+                    "Message_Type": "User_Initial"
+                },
+                {
+                    "S.No.": 2,
+                    "Message": "Here are recommendations for better sleep...",
+                    "Sender": "Dr. Warren",
+                    "Date": "2025-01-01",
+                    "Time": "09:01:00",
+                    "Day": 1,
+                    "Reply_Needed": false,
+                    "Recommendations": ["sleep hygiene", "reduce screen time"],
+                    "Message_Type": "Agent_Response"
+                },
+                {
+                    "S.No.": 3,
+                    "Message": "Perfect, I'll implement these changes",
+                    "Sender": "User",
+                    "Date": "2025-01-01",
+                    "Time": "09:03:00",
+                    "Day": 1,
+                    "Reply_Needed": false,
+                    "Recommendations": [],
+                    "Message_Type": "User_Follow_Up"
+                },
+                {
+                    "S.No.": 4,
+                    "Message": "Thank you for the update...",
+                    "Sender": "Dr. Warren",
+                    "Date": "2025-01-01",
+                    "Time": "09:04:00",
+                    "Day": 1,
+                    "Reply_Needed": false,
+                    "Recommendations": [],
+                    "Message_Type": "Agent_Follow_Up"
+                }
+            ]
+        };
+
+        async function loadData(forceRefresh = false) {
+            const dataSource = document.getElementById('dataSource').value;
+            const maxNodes = parseInt(document.getElementById('maxNodes').value);
+            
+            console.log('Loading data from source:', dataSource, 'forceRefresh:', forceRefresh);
+            
+            try {
+                if (dataSource === 'demo') {
+                    console.log('Loading demo data');
+                    conversationData = demoData;
+                } else {
+                    console.log('Loading simulation data from /data/conversation_history.json');
+                    // Load the actual simulation data with correct path
+                    let url = '/data/conversation_history.json';
+                    if (forceRefresh) {
+                        // Add timestamp to prevent caching
+                        url += `?t=${Date.now()}`;
+                        console.log('Cache-busting URL:', url);
+                    }
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+                            'Pragma': forceRefresh ? 'no-cache' : 'default',
+                            'Expires': forceRefresh ? '0' : 'default'
+                        }
+                    });
+                    if (!response.ok) throw new Error(`Failed to load JSON data: ${response.status} ${response.statusText}`);
+                    const rawData = await response.json();
+                    console.log('Raw data loaded successfully:', rawData);
+                    
+                    // Transform the simulation data to the expected format
+                    conversationData = transformSimulationData(rawData);
+                }
+
+                console.log('Data loaded, analyzing decision tree...');
+                // Process and analyze the data
+                decisionTree = analyzeDecisionTree(conversationData);
+                
+                console.log('Decision tree analyzed, updating UI...');
+                // Update stats
+                updateStats();
+                
+                // Update filters
+                updateFilters();
+                
+                // Visualize the tree
+                visualizeDecisionTree(maxNodes);
+                
+                console.log('Data loading complete!');
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Failed to load data: ' + error.message);
+            }
+        }
+
+        function analyzeDecisionTree(data) {
+            const decisionPoints = [];
+            const healthDomains = new Set();
+
+            // Read thresholds from controls
+            const minRecs = parseInt(document.getElementById('minRecs')?.value || 1, 10);
+            const flagQuestions = (document.getElementById('flagQuestions')?.value === 'true');
+
+            const convRaw = data.conversation_history || [];
+
+            // Normalize messages and infer missing fields (backwards compatibility)
+            const conv = convRaw.map((m, idx) => {
+                const Sender = m.Sender || m.sender || 'Unknown';
+                const Message = m.Message || m.message || '';
+                const Date = m.Date || m.date || '';
+                const Time = m.Time || m.time || '';
+                const Day = (typeof (m.Day || m.day) !== 'undefined') ? (m.Day || m.day) : Math.floor(idx / 10) + 1;
+
+                // Infer Reply_Needed when not present: questions or explicit ask-words
+                let Reply_Needed = (typeof m.Reply_Needed !== 'undefined') ? m.Reply_Needed : 
+                                   (typeof m.reply_needed !== 'undefined' ? m.reply_needed : /\\?|\\bneed\\b|\\bhelp\\b|\\badvice\\b|\\bwhen\\b|\\bshould\\b/i.test(Message));
+
+                // Use provided Recommendations if present, otherwise try to extract heuristics
+                let Recommendations = m.Recommendations || m.recommendations || [];
+                if ((!Recommendations || Recommendations.length === 0) && typeof Message === 'string' && Message.length > 0) {
+                    const recs = [];
+                    const lines = Message.split(/\\r?\\n/);
+                    lines.forEach(line => {
+                        const trimmed = line.trim();
+                        if (/^[0-9]+\\./.test(trimmed) || /^•/.test(trimmed) || /^-\\s/.test(trimmed) || /next steps|recommend|action plan|what to do|next:/i.test(trimmed)) {
+                            const cleaned = trimmed.replace(/^[0-9]+\\.\s*/, '').replace(/^•\s*/, '').replace(/^-\s*/, '');
+                            if (cleaned.length > 6) recs.push(cleaned);
+                        }
+                    });
+
+                    // Pull out sentences that contain common action verbs as possible recommendations
+                    const actionVerbs = ['schedule','check','measure','hydrate','log','track','monitor','add','remove','snack','eat','sleep','rest','walk','exercise','consult','appointment','follow up','follow-up'];
+                    const sentences = Message.split(/[\\.\\!\\?]\\s+/);
+                    actionVerbs.forEach(v => {
+                        const re = new RegExp('\\b' + v + '\\b', 'i');
+                        const hit = sentences.find(s => re.test(s));
+                        if (hit && !recs.includes(hit.trim())) recs.push(hit.trim());
+                    });
+
+                    if (recs.length > 0) Recommendations = recs;
+                }
+
+                return {
+                    Sender,
+                    Message,
+                    Date,
+                    Time,
+                    Day,
+                    Reply_Needed,
+                    Recommendations,
+                    __index: idx
+                };
+            });
+
+            for (let i = 0; i < conv.length; i++) {
+                const message = conv[i];
+                const recs = message.Recommendations || [];
+                const recCount = recs.length;
+                const isQuestion = typeof message.Message === 'string' && message.Message.includes('?');
+
+                // Flagging logic using well-defined thresholds:
+                // - Reply_Needed with at least minRecs recommendations
+                // - Or message contains at least minRecs recommendations (heuristic extraction)
+                // - Or (optional) treat questions as decision points
+                const flagged = ((message.Reply_Needed && recCount >= minRecs) || (recCount >= minRecs) || (flagQuestions && isQuestion));
+
+                if (flagged) {
+                    const domain = categorizeHealthDomain(recs);
+                    healthDomains.add(domain);
+
+                    // Capture divergence context: up to 3 messages prior to this decision point
+                    const divergence_context = [];
+                    for (let j = Math.max(0, i - 3); j < i; j++) {
+                        divergence_context.push(conv[j]);
+                    }
+
+                    decisionPoints.push({
+                        ...message,
+                        __index: i,
+                        healthDomain: domain,
+                        possiblePaths: identifyPossiblePaths(recs),
+                        urgency: assessUrgency(recs),
+                        complexity: assessComplexity(recs),
+                        divergence_context
+                    });
+                }
+            }
+
+            return {
+                decisionPoints,
+                healthDomains: Array.from(healthDomains),
+                totalMessages: data.total_messages,
+                simulationPeriod: data.simulation_period
+            };
+        }
+
+        function categorizeHealthDomain(recommendations) {
+            const recText = recommendations.join(' ').toLowerCase();
+            
+            if (recText.includes('sleep') || recText.includes('hrv') || recText.includes('rest')) {
+                return 'Sleep & Recovery';
+            } else if (recText.includes('meditate') || recText.includes('stress') || recText.includes('mindfulness')) {
+                return 'Mental Health';
+            } else if (recText.includes('exercise') || recText.includes('workout') || recText.includes('training')) {
+                return 'Physical Activity';
+            } else if (recText.includes('diet') || recText.includes('nutrition') || recText.includes('glucose')) {
+                return 'Nutrition';
+            } else if (recText.includes('schedule') || recText.includes('appointment') || recText.includes('consultation')) {
+                return 'Medical Consultation';
+            } else {
+                return 'General Health';
+            }
+        }
+
+        function identifyPossiblePaths(recommendations) {
+            const paths = [];
+            const recText = recommendations.join(' ').toLowerCase();
+            
+            if (recText.includes('sleep') || recText.includes('rest')) paths.push('Sleep/Rest');
+            if (recText.includes('meditate') || recText.includes('mindfulness')) paths.push('Meditation');
+            if (recText.includes('exercise') || recText.includes('workout')) paths.push('Exercise');
+            if (recText.includes('diet') || recText.includes('nutrition')) paths.push('Nutrition');
+            if (recText.includes('schedule') || recText.includes('appointment')) paths.push('Consultation');
+            
+            return paths.length > 0 ? paths : ['General Health Management'];
+        }
+
+        function assessUrgency(recommendations) {
+            const recText = recommendations.join(' ').toLowerCase();
+            if (recText.includes('immediate') || recText.includes('urgent')) return 'High';
+            if (recText.includes('schedule') || recText.includes('appointment')) return 'Medium';
+            return 'Low';
+        }
+
+        function assessComplexity(recommendations) {
+            if (recommendations.length <= 2) return 'Simple';
+            if (recommendations.length <= 4) return 'Moderate';
+            return 'Complex';
+        }
+
+        function updateStats() {
+            console.log('Updating stats with decision tree:', decisionTree);
+            
+            if (!decisionTree) {
+                console.warn('No decision tree data available');
+                return;
+            }
+            
+            console.log('Total messages:', decisionTree.totalMessages);
+            console.log('Decision points:', decisionTree.decisionPoints ? decisionTree.decisionPoints.length : 0);
+            console.log('Health domains:', decisionTree.healthDomains ? decisionTree.healthDomains.length : 0);
+            console.log('Simulation period:', decisionTree.simulationPeriod);
+            
+            try {
+                document.getElementById('totalMessages').textContent = decisionTree.totalMessages || '-';
+                document.getElementById('decisionPoints').textContent = decisionTree.decisionPoints ? decisionTree.decisionPoints.length : '-';
+                document.getElementById('healthDomains').textContent = decisionTree.healthDomains ? decisionTree.healthDomains.length : '-';
+                document.getElementById('simulationPeriod').textContent = decisionTree.simulationPeriod || '-';
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        function updateFilters() {
+            const filterContainer = document.getElementById('domainFilters');
+            filterContainer.innerHTML = '';
+            
+            decisionTree.healthDomains.forEach(domain => {
+                const chip = document.createElement('div');
+                chip.className = 'filter-chip';
+                chip.textContent = domain;
+                chip.onclick = () => toggleFilter(domain, chip);
+                filterContainer.appendChild(chip);
+            });
+        }
+
+        function toggleFilter(domain, chip) {
+            chip.classList.toggle('active');
+            // Re-render tree with filters
+            const maxNodes = parseInt(document.getElementById('maxNodes').value);
+            visualizeDecisionTree(maxNodes);
+        }
+
+        function visualizeDecisionTree(maxNodes) {
+            const container = document.getElementById('decisionTree');
+            container.innerHTML = '';
+
+            // Remove any existing SVG overlay
+            const vizWrap = document.querySelector('.visualization-container');
+            let existingSvg = document.getElementById('svgOverlay');
+            if (existingSvg) existingSvg.remove();
+
+            if (!decisionTree || decisionTree.decisionPoints.length === 0) {
+                container.innerHTML = '<div class="loading">No decision points found</div>';
+                return;
+            }
+
+            // Get active filters
+            const activeFilters = Array.from(document.querySelectorAll('.filter-chip.active'))
+                .map(chip => chip.textContent);
+
+            // Filter decision points
+            let filteredPoints = decisionTree.decisionPoints;
+            if (activeFilters.length > 0) {
+                filteredPoints = filteredPoints.filter(point =>
+                    activeFilters.includes(point.healthDomain)
+                );
+            }
+
+            // Limit nodes for performance
+            filteredPoints = filteredPoints.slice(0, maxNodes);
+
+            // Sort by original index to preserve chronological order
+            filteredPoints.sort((a, b) => (a.__index || 0) - (b.__index || 0));
+
+            // Create SVG overlay for connectors
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('id', 'svgOverlay');
+            svg.setAttribute('class', 'svg-overlay');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            vizWrap.appendChild(svg);
+
+            // Group by day for visualization but keep sequential ordering
+            const groupedByDay = groupByDay(filteredPoints);
+
+            Object.keys(groupedByDay).forEach((day, dayIndex) => {
+                const dayGroup = document.createElement('div');
+                dayGroup.className = 'decision-level';
+                dayGroup.style.position = 'relative';
+
+                // Add day label
+                const dayLabel = document.createElement('div');
+                dayLabel.style.cssText = 'font-weight: bold; color: #667eea; margin-bottom: 10px; text-align: center; width: 100%;';
+                dayLabel.textContent = `Day ${day}`;
+                dayGroup.appendChild(dayLabel);
+
+                const dayPoints = groupedByDay[day];
+                dayPoints.forEach((point, pointIndex) => {
+                    // Create divergence node (small) if divergence_context exists
+                    if (point.divergence_context && point.divergence_context.length > 0) {
+                        const divNode = document.createElement('div');
+                        divNode.className = 'divergence-node';
+                        divNode.id = `divergence-${point.__index}`;
+                        const last = point.divergence_context[point.divergence_context.length - 1];
+                        divNode.textContent = (last && last.Message) ? (last.Message.length > 80 ? last.Message.substring(0, 80) + '...' : last.Message) : 'Context';
+                        dayGroup.appendChild(divNode);
+                    }
+
+                    // Create decision node
+                    const node = createDecisionNode(point);
+                    node.id = `node-${point.__index}`;
+                    dayGroup.appendChild(node);
+
+                    // If there are multiple possible paths, add an explicit split node directly after this node
+                    if (point.possiblePaths && point.possiblePaths.length > 1) {
+                        const split = document.createElement('div');
+                        split.className = 'split-node';
+                        split.id = `split-${point.__index}`;
+                        // Render short list of paths
+                        const header = document.createElement('div');
+                        header.style.fontWeight = '600';
+                        header.style.marginBottom = '6px';
+                        header.textContent = 'Possible paths';
+                        split.appendChild(header);
+                        point.possiblePaths.forEach(p => {
+                            const pr = document.createElement('div');
+                            pr.className = 'path';
+                            pr.textContent = p;
+                            split.appendChild(pr);
+                        });
+                        dayGroup.appendChild(split);
+                    }
+
+                    // Add arrow if not the last node in this day (visual spacing)
+                    if (pointIndex < dayPoints.length - 1) {
+                        const arrow = document.createElement('div');
+                        arrow.className = 'arrow';
+                        dayGroup.appendChild(arrow);
+                    }
+                });
+
+                container.appendChild(dayGroup);
+
+                // Add arrow between days if not the last day
+                if (dayIndex < Object.keys(groupedByDay).length - 1) {
+                    const dayArrow = document.createElement('div');
+                    dayArrow.className = 'arrow';
+                    dayArrow.style.height = '40px';
+                    container.appendChild(dayArrow);
+                }
+            });
+
+            // After DOM inserted, compute positions and draw connections
+            // Slight delay to ensure layout done
+            requestAnimationFrame(() => {
+                // Build index->element map
+                const nodeMap = {};
+                filteredPoints.forEach(p => {
+                    const el = document.getElementById(`node-${p.__index}`);
+                    if (el) nodeMap[p.__index] = el;
+                });
+
+                // Draw connectors between consecutive decision points (branching)
+                for (let k = 1; k < filteredPoints.length; k++) {
+                    const prev = filteredPoints[k - 1];
+                    const curr = filteredPoints[k];
+                    const elPrev = nodeMap[prev.__index];
+                    const elCurr = nodeMap[curr.__index];
+                    if (!elPrev || !elCurr) continue;
+
+                    const rPrev = elPrev.getBoundingClientRect();
+                    const rCurr = elCurr.getBoundingClientRect();
+                    const parentRect = vizWrap.getBoundingClientRect();
+
+                    // compute centers relative to vizWrap
+                    const startX = rPrev.left + rPrev.width / 2 - parentRect.left;
+                    const startY = rPrev.top + rPrev.height - parentRect.top;
+                    const endX = rCurr.left + rCurr.width / 2 - parentRect.left;
+                    const endY = rCurr.top - parentRect.top;
+
+                    const path = document.createElementNS(svgNS, 'path');
+                    const midY = (startY + endY) / 2;
+                    const d = `M ${startX} ${startY} C ${startX} ${midY} ${endX} ${midY} ${endX} ${endY}`;
+                    path.setAttribute('d', d);
+                    path.setAttribute('stroke', '#667eea');
+                    path.setAttribute('stroke-width', '2');
+                    path.setAttribute('fill', 'none');
+                    path.setAttribute('opacity', '0.9');
+                    svg.appendChild(path);
+
+                    // Add arrow marker (simple triangle)
+                    const marker = document.createElementNS(svgNS, 'circle');
+                    marker.setAttribute('cx', endX);
+                    marker.setAttribute('cy', endY);
+                    marker.setAttribute('r', '3');
+                    marker.setAttribute('fill', '#667eea');
+                    svg.appendChild(marker);
+                }
+
+                // Draw small connectors from divergence nodes to their decision node
+                filteredPoints.forEach(p => {
+                    if (p.divergence_context && p.divergence_context.length > 0) {
+                        const divEl = document.getElementById(`divergence-${p.__index}`);
+                        const nodeEl = document.getElementById(`node-${p.__index}`);
+                        if (!divEl || !nodeEl) return;
+
+                        const rDiv = divEl.getBoundingClientRect();
+                        const rNode = nodeEl.getBoundingClientRect();
+                        const parentRect = vizWrap.getBoundingClientRect();
+
+                        const startX = rDiv.left + rDiv.width / 2 - parentRect.left;
+                        const startY = rDiv.top + rDiv.height - parentRect.top;
+                        const endX = rNode.left + rNode.width / 2 - parentRect.left;
+                        const endY = rNode.top - parentRect.top;
+
+                        const path = document.createElementNS(svgNS, 'path');
+                        const midY = (startY + endY) / 2;
+                        const d = `M ${startX} ${startY} C ${startX} ${midY} ${endX} ${midY} ${endX} ${endY}`;
+                        path.setAttribute('d', d);
+                        path.setAttribute('stroke', '#ffc107');
+                        path.setAttribute('stroke-width', '1.5');
+                        path.setAttribute('fill', 'none');
+                        path.setAttribute('opacity', '0.95');
+                        svg.appendChild(path);
+                    }
+                });
+
+                // Draw connectors from node -> split node when a split exists
+                filteredPoints.forEach(p => {
+                    if (p.possiblePaths && p.possiblePaths.length > 1) {
+                        const nodeEl = document.getElementById(`node-${p.__index}`);
+                        const splitEl = document.getElementById(`split-${p.__index}`);
+                        if (!nodeEl || !splitEl) return;
+
+                        const rNode = nodeEl.getBoundingClientRect();
+                        const rSplit = splitEl.getBoundingClientRect();
+                        const parentRect = vizWrap.getBoundingClientRect();
+
+                        const startX = rNode.left + rNode.width / 2 - parentRect.left;
+                        const startY = rNode.top + rNode.height - parentRect.top;
+                        const endX = rSplit.left + rSplit.width / 2 - parentRect.left;
+                        const endY = rSplit.top - parentRect.top;
+
+                        const path = document.createElementNS(svgNS, 'path');
+                        const midY = (startY + endY) / 2;
+                        const d = `M ${startX} ${startY} C ${startX} ${midY} ${endX} ${midY} ${endX} ${endY}`;
+                        path.setAttribute('d', d);
+                        path.setAttribute('stroke', '#007bff');
+                        path.setAttribute('stroke-width', '1.6');
+                        path.setAttribute('fill', 'none');
+                        path.setAttribute('opacity', '0.95');
+                        svg.appendChild(path);
+                    }
+                });
+            });
+
+            // Initialize pan/zoom after first render
+            setupPanZoom();
+        }
+
+        function groupByDay(points) {
+            const grouped = {};
+            points.forEach(point => {
+                if (!grouped[point.Day]) {
+                    grouped[point.Day] = [];
+                }
+                grouped[point.Day].push(point);
+            });
+            return grouped;
+        }
+
+        function createDecisionNode(point) {
+            const node = document.createElement('div');
+            node.className = 'decision-node decision-point';
+            
+            const title = document.createElement('div');
+            title.className = 'node-title';
+            title.textContent = `${point.Sender} (${point.healthDomain})`;
+            
+            const content = document.createElement('div');
+            content.className = 'node-content';
+            content.textContent = point.Message.length > 100 ? 
+                point.Message.substring(0, 100) + '...' : point.Message;
+            
+            const meta = document.createElement('div');
+            meta.className = 'node-meta';
+            meta.textContent = `${point.Time} | ${point.urgency} | ${point.complexity}`;
+            
+            node.appendChild(title);
+            node.appendChild(content);
+            node.appendChild(meta);
+
+            // store possible paths for quick access
+            node.dataset.possiblePaths = JSON.stringify(point.possiblePaths || []);
+            node.dataset.recommendations = JSON.stringify(point.Recommendations || []);
+            node.dataset.divergence = JSON.stringify(point.divergence_context || []);
+
+            // Hover tooltip: show full recommendations + short divergence preview
+            node.addEventListener('mouseenter', (e) => {
+                const recs = point.Recommendations && point.Recommendations.length ? point.Recommendations.join('<br/>') : 'No explicit recommendations';
+                const divs = (point.divergence_context || []).map(d => `• ${d.Message ? d.Message.substring(0,120) : d.message || ''}`);
+                const divergenceText = divs.length ? divs.join('<br/>') : '—';
+                const html = `<strong>${point.Sender} — ${point.Date} ${point.Time}</strong><br/><br/>
+                              <em>Recommendations:</em><br/>${recs}<br/><br/>
+                              <em>Context (previous):</em><br/>${divergenceText}`;
+                showTooltip(html, e.clientX, e.clientY);
+            });
+            node.addEventListener('mousemove', (e) => {
+                // update tooltip position
+                showTooltip(tooltip.innerHTML, e.clientX, e.clientY);
+            });
+            node.addEventListener('mouseleave', hideTooltip);
+
+            // Add click event for details (existing)
+            node.onclick = () => showNodeDetails(point);
+            
+            return node;
+        }
+
+        function showNodeDetails(point) {
+            const details = `
+                **Decision Point Details**
+                
+                **Sender:** ${point.Sender}
+                **Date:** ${point.Date} ${point.Time}
+                **Health Domain:** ${point.healthDomain}
+                **Urgency:** ${point.urgency}
+                **Complexity:** ${point.complexity}
+                **Possible Paths:** ${point.possiblePaths.join(', ')}
+                **Recommendations:** ${point.Recommendations.join('; ')}
+                **Message:** ${point.Message}
+            `;
+            
+            alert(details);
+        }
+
+        function exportTree() {
+            if (!decisionTree) {
+                alert('No data loaded to export');
+                return;
+            }
+            
+            const exportData = {
+                export_timestamp: new Date().toISOString(),
+                decision_tree: decisionTree,
+                filters: {
+                    maxNodes: document.getElementById('maxNodes').value,
+                    activeFilters: Array.from(document.querySelectorAll('.filter-chip.active'))
+                        .map(chip => chip.textContent)
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'decision_tree_export.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function testDataConnection() {
+            console.log('🧪 Testing data connection...');
+            
+            // Test 1: Check if server is accessible
+            fetch('/data/conversation_history.json')
+                .then(response => {
+                    console.log('✅ Server response:', response.status, response.statusText);
+                    console.log('✅ Last-Modified header:', response.headers.get('Last-Modified'));
+                    console.log('✅ Cache-Control header:', response.headers.get('Cache-Control'));
+                    
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                })
+                .then(data => {
+                    console.log('✅ Data loaded successfully:', {
+                        total_messages: data.total_messages,
+                        simulation_period: data.simulation_period,
+                        first_message: data.conversation_history?.[0],
+                        data_structure: Object.keys(data)
+                    });
+                    
+                    // Test 2: Check data structure
+                    if (data.conversation_history && Array.isArray(data.conversation_history)) {
+                        console.log('✅ conversation_history is an array with', data.conversation_history.length, 'entries');
+                        
+                        // Test 3: Check first few entries
+                        const firstEntry = data.conversation_history[0];
+                        console.log('✅ First entry structure:', Object.keys(firstEntry));
+                        console.log('✅ First entry sample:', firstEntry);
+                        
+                        alert(`✅ Connection successful!\n\nTotal Messages: ${data.total_messages}\nSimulation Period: ${data.simulation_period}\nData Format: ${Object.keys(firstEntry).join(', ')}\n\nLast Modified: ${new Date().toLocaleString()}`);
+                    } else {
+                        console.error('❌ conversation_history is not an array:', data.conversation_history);
+                        alert('❌ Data structure issue: conversation_history is not an array');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Connection failed:', error);
+                    alert(`❌ Connection failed: ${error.message}`);
+                });
+        }
+
+        function exportCSV() {
+            if (!decisionTree) {
+                alert('No data loaded to export');
+                return;
+            }
+            
+            const csvContent = [
+                ['Sender', 'Date', 'Time', 'Health Domain', 'Urgency', 'Complexity', 'Message'],
+                ...decisionTree.decisionPoints.map(point => [
+                    point.Sender,
+                    point.Date,
+                    point.Time,
+                    point.healthDomain,
+                    point.urgency,
+                    point.complexity,
+                    point.Message.replace(/"/g, '""')
+                ])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'decision_tree_export.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showError(message) {
+            const container = document.getElementById('decisionTree');
+            container.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Auto-refresh functionality
+        function startAutoRefresh() {
+            setInterval(() => {
+                if (document.getElementById('dataSource').value === 'simulation') {
+                    console.log('Auto-refreshing simulation data...');
+                    // Force fresh data by adding timestamp to prevent caching
+                    loadData(true);
+                }
+            }, 30000); // 30 seconds
+        }
+
+        // Initialize when page loads
+        window.onload = function() {
+            loadData();
+            startAutoRefresh();
+        };
+    </script>
+</body>
+</html>

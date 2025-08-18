@@ -1,16 +1,19 @@
 {
   "week": 3,
   "events": [],
-  "conversations_count": 20,
+  "conversations_count": 2,
   "adherence_rate": 0.5,
+  "agent_response": "Ruby: That’s a smart plan! Let me know if you’d like a quick packing checklist or a reminder schedule for the last few days before you leave. I can also double‑check your travel documents, flight times, and any pre‑flight requirements (like passport, visa, or health certificates). If you’d like, I’ll set a calendar reminder for your packing milestones—e.g., “Pack luggage” 3 days out, “Print boarding pass” 1 day out. Just ping me if there’s anything else you’d like to prep. Have a smooth trip!",
   "health_metrics": {
     "blood_sugar_avg": 176,
     "a1c": 6.140000000000001,
     "weight": 75
   },
   "agent_actions": {
-    "doctor_hours": 10,
-    "coach_hours": 20
+    "doctor_hours": 12,
+    "coach_hours": 14
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: That’s a smart plan! Let me know if you’d like a quick packing checklist or a reminder schedule for the last few days before you leave. I can also double‑check your travel documents, flight times, and..."
+  ]
 }

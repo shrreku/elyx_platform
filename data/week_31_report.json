@@ -1,8 +1,9 @@
 {
   "week": 31,
   "events": [],
-  "conversations_count": 15,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.7,
+  "agent_response": "Ruby: Hi there! I’m glad the tips were helpful. If you’d like me to review your itinerary or set reminders for key dates (e.g., flight check‑in, hotel arrival, local transportation), just let me know. I can also help you sync your travel plans with your calendar or arrange any last‑minute changes. Feel free to share any additional details, and I’ll keep everything running smoothly for you. Safe travels!",
   "health_metrics": {
     "blood_sugar_avg": 120,
     "a1c": 5.58,
@@ -10,7 +11,9 @@
   },
   "agent_actions": {
     "doctor_hours": 10,
-    "coach_hours": 11
+    "coach_hours": 20
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! I’m glad the tips were helpful. If you’d like me to review your itinerary or set reminders for key dates (e.g., flight check‑in, hotel arrival, local transportation), just let me know. I can..."
+  ]
 }

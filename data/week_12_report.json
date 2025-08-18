@@ -3,16 +3,19 @@
   "events": [
     "quarterly_diagnostic_test"
   ],
-  "conversations_count": 25,
-  "adherence_rate": 0.3,
+  "conversations_count": 2,
+  "adherence_rate": 0.8,
+  "agent_response": "Ruby: Hi [Name],  \n\nWonderful! I've scheduled your Quarterly Diagnostic Test for the confirmed time. A calendar invite and a 24‑hour reminder will be sent to you shortly. If you’d like any pre‑test materials or have special requirements (dietary, accessibility, etc.), just let me know and I’ll arrange them for you. I’ll also send a brief checklist to ensure you have everything needed for the session.  \n\nFeel free to reach out with any questions or changes. I’m here to make this as smooth as possible!  \n\nWarm regards,  \nRuby",
   "health_metrics": {
     "blood_sugar_avg": 158,
     "a1c": 5.96,
     "weight": 73.8
   },
   "agent_actions": {
-    "doctor_hours": 15,
-    "coach_hours": 19
+    "doctor_hours": 13,
+    "coach_hours": 14
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi [Name],  \n\nWonderful! I've scheduled your Quarterly Diagnostic Test for the confirmed time. A calendar invite and a 24‑hour reminder will be sent to you shortly. If you’d like any pre‑test material..."
+  ]
 }

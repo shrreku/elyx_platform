@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<messages>
+    <message>
+        <content>Just completed today's exercise, felt stable. HR zones seemed fine.</content>
+        <sender>Rohan Patel</sender>
+        <date>2025-01-01</date>
+        <time>06:19 AM</time>
+    </message>
+    <message>
+        <content>Made some progress on Zone 2 cardio today. Felt dizzy around 30min, need advice.</content>
+        <sender>Rohan Patel</sender>
+        <date>2025-01-02</date>
+        <time>06:19 AM</time>
+    </message>
+    <message>
+        <content>Good morning! Just completed my initial onboarding yesterday. Ready to start this journey. &lt;Garmin data: Sleep score 78, HRV 42ms, Resting HR 68 bpm, Stress level: Medium&gt;. Had my morning 20-min routine - feeling energetic. When can we schedule my first comprehensive assessment?</content>
+        <sender>Rohan Patel</sender>
+        <date>2025-01-03</date>
+        <time>09:25 AM</time>
+    </message>
+    <message>
+        <content>I have a travel coming up to Seoul next week. Planning for jet lag management and travel-friendly alternatives.</content>
+        <sender>Rohan Patel</sender>
+        <date>2025-01-04</date>
+        <time>09:26 AM</time>
+    </message>
+    <message>
+        <content>Quick question about the meal plan you sent. My cook is asking about portion sizes for the Mediterranean-style breakfast. &lt;Yesterday's metrics: Steps 8,432, Active calories 347, Sleep 6h 45m&gt;</content>
+        <sender>Rohan Patel</sender>
+        <date>2025-01-05</date>
+        <time>07:57 AM</time>
+    </message>
+</messages>

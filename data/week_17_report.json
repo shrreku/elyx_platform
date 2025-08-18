@@ -1,16 +1,19 @@
 {
   "week": 17,
   "events": [],
-  "conversations_count": 15,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Thank you for confirming! I’ve just sent a calendar invite for the scheduled time. Please let me know if you’d like a video link, a virtual background, or any special accommodations. I’ll keep the event on my radar and send a gentle reminder a day before. If anything changes or you need to reschedule, just ping me—happy to adjust right away. Looking forward to our meeting!",
   "health_metrics": {
     "blood_sugar_avg": 148,
     "a1c": 5.86,
     "weight": 73.3
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 10
+    "doctor_hours": 15,
+    "coach_hours": 11
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thank you for confirming! I’ve just sent a calendar invite for the scheduled time. Please let me know if you’d like a video link, a virtual background, or any special accommodations. I’ll keep the eve..."
+  ]
 }

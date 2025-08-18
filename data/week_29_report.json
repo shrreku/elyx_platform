@@ -1,16 +1,19 @@
 {
   "week": 29,
   "events": [],
-  "conversations_count": 25,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: That’s a great plan! I’ve noted your upcoming trip in week 29. When you’re ready, let me set up a countdown calendar and gentle reminders for key tasks—visa checks, luggage list, flight confirmations, and any local appointments. I can also suggest a packing checklist tailored to your destination, and set a virtual check‑in a day before departure to review everything. If you’d like, I can automate a daily prompt to confirm you’re on track. Just let me know any specific preferences, and I’ll integrate them right away. Safe travels!",
   "health_metrics": {
     "blood_sugar_avg": 124,
     "a1c": 5.62,
     "weight": 72.1
   },
   "agent_actions": {
-    "doctor_hours": 15,
-    "coach_hours": 14
+    "doctor_hours": 14,
+    "coach_hours": 17
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: That’s a great plan! I’ve noted your upcoming trip in week 29. When you’re ready, let me set up a countdown calendar and gentle reminders for key tasks—visa checks, luggage list, flight confirmations,..."
+  ]
 }

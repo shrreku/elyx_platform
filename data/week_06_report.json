@@ -3,16 +3,19 @@
   "events": [
     "exercise_plan_update"
   ],
-  "conversations_count": 25,
+  "conversations_count": 2,
   "adherence_rate": 0.5,
+  "agent_response": "Ruby: That’s fantastic! I’ll note that you’re sharing the new exercise plan with your cook. If you’d like, I can suggest a meal‑prep schedule that syncs with your workouts or help adjust macros for your new routine. I’ll set a reminder to touch base next week to see how it’s working for you. Just let me know if you need any tweaks or have questions in the meantime. Your progress is on track—keep it up!",
   "health_metrics": {
     "blood_sugar_avg": 170,
     "a1c": 6.08,
     "weight": 74.4
   },
   "agent_actions": {
-    "doctor_hours": 8,
+    "doctor_hours": 10,
     "coach_hours": 18
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: That’s fantastic! I’ll note that you’re sharing the new exercise plan with your cook. If you’d like, I can suggest a meal‑prep schedule that syncs with your workouts or help adjust macros for your new..."
+  ]
 }

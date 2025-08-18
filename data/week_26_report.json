@@ -3,16 +3,19 @@
   "events": [
     "exercise_plan_update"
   ],
-  "conversations_count": 15,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Hi there! I’m thrilled the travel tips hit the mark. I’ve updated your exercise plan to align with your upcoming trip and set a reminder to review it three days before departure. I’ll also send a quick packing checklist for any workout gear you’ll need. If you’d like a light, travel‑friendly routine or any extra resources, just let me know. I’ll ping you a day before you leave with a final checklist and a friendly nudge to stay hydrated and rest up. Safe travels, and feel free to reach out anytime—your smooth journey is my priority.",
   "health_metrics": {
     "blood_sugar_avg": 130,
     "a1c": 5.68,
     "weight": 72.4
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 10
+    "doctor_hours": 9,
+    "coach_hours": 17
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! I’m thrilled the travel tips hit the mark. I’ve updated your exercise plan to align with your upcoming trip and set a reminder to review it three days before departure. I’ll also send a quic..."
+  ]
 }

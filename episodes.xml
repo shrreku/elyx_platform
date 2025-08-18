@@ -1,0 +1,113 @@
+<journey>
+    <episode name="Onboarding (Month 1, Week 1-2)" duration="4 days">
+        <context>Initial setup, team introductions, baseline data collection</context>
+        <messages>
+            <message sender="Rohan" day="1">Ruby, I'm starting with Elyx today. I've attached my recent medical records and supplement list. My main concerns are family history of heart disease and managing stress from my sales role. I travel 2-3 times per month internationally. Need efficient, data-driven approach.</message>
+            <message sender="Rohan" day="1">I currently use a Garmin watch for runs but looking to upgrade to better sleep and HRV tracking. What do you recommend? Also, when can I speak with the medical team about my cholesterol levels from last month's test?</message>
+            <message sender="Rohan" day="1">Sarah, my assistant, will coordinate scheduling. She has access to my calendar. I prefer morning calls before 10 AM Singapore time when I'm not traveling.</message>
+            <message sender="Rohan" day="2">Received the Whoop device. Setting it up now. Quick question - how long before I get meaningful data? I have a board presentation next week and want to optimize my preparation.</message>
+            <message sender="Rohan" day="2">Dr. Warren, I saw your note about comprehensive testing. I'm fine with blood work but want to understand the timeline and what specific markers we're tracking for cardiovascular risk.</message>
+            <message sender="Rohan" day="4">First few nights of Whoop data are interesting. Recovery scores around 45-55%. Is this normal for someone with my stress levels? Sleep efficiency showing 78-82%.</message>
+            <message sender="Rohan" day="4">Advik, the heart rate zones seem off compared to my Garmin. During my 30-minute run this morning, Whoop showed strain of 15.2. Does this correlate with the high intensity minutes I was concerned about?</message>
+        </messages>
+    </episode>
+    <episode name="Sleep Deprivation + Late Night Coffee + Sugar Spike (Month 2, Week 3)" duration="3 days">
+        <context>High work stress, poor sleep habits, concerning metabolic patterns</context>
+        <messages>
+            <message sender="Rohan" day="1">Team, having a rough week. Been staying up until 1-2 AM preparing for quarterly reviews. Whoop recovery has been red (20-35%) for three consecutive days. Feeling the impact on cognitive performance.</message>
+            <message sender="Rohan" day="1">I've been drinking coffee around 9 PM after my evening workout to stay alert for late work sessions. I know this isn't ideal but deadlines are brutal right now.</message>
+            <message sender="Rohan" day="1">CGM showing some weird patterns - glucose spiking to 160+ around 11 PM even though I haven't eaten since 7 PM. Is the late coffee causing this? My sleep latency has increased to 45+ minutes.</message>
+            <message sender="Rohan" day="2">Another terrible night. HRV dropped to 28ms (usually around 45ms). Sleep stages show only 45 minutes of deep sleep. Woke up 8 times according to the data.</message>
+            <message sender="Rohan" day="2">Advik, the correlation is clear - when I have coffee after 8 PM, my glucose stays elevated until after midnight and sleep quality crashes. But I need the caffeine to function. What are my options?</message>
+            <message sender="Rohan" day="2">Resting heart rate has increased from my usual 58 bpm to 68 bpm. Is this just stress or should Dr. Warren be concerned?</message>
+            <message sender="Rohan" day="3">Tried your suggestion of green tea instead of coffee last night. Glucose spike was smaller (peaked at 125 mg/dL vs 165 mg/dL), but still took longer to come down compared to normal evening patterns.</message>
+            <message sender="Rohan" day="3">Recovery score improved to 58% but still not great. Sleep efficiency up to 81% though. Willing to experiment more with evening routine if you have specific protocols.</message>
+        </messages>
+    </episode>
+    <episode name="Jetlag from USA Travel (Month 3, Week 2)" duration="4 days">
+        <context>Business trip to USA, circadian disruption, travel stress</context>
+        <messages>
+            <message sender="Rohan" day="1">Flying to San Francisco tonight for client meetings. 17-hour journey with layover. Following the travel protocol Ruby sent - eating last meal at 3 PM Singapore time.</message>
+            <message sender="Rohan" day="1">CGM showing stable patterns today (80-120 mg/dL range). Want to track how jetlag affects glucose control and sleep architecture over the next week.</message>
+            <message sender="Rohan" day="2">Landed in SF 6 hours ago. Following the light exposure protocol - got 20 minutes of morning sun without sunglasses. Feeling surprisingly functional compared to usual jetlag.</message>
+            <message sender="Rohan" day="2">First night's sleep data is interesting. Only 4.2 hours total sleep but HRV maintained at 41ms. Usually it crashes below 30ms after long flights. The meal timing adjustment might be working.</message>
+            <message sender="Rohan" day="2">Glucose patterns are erratic - dawn phenomenon kicked in at 4 AM local time (still on Singapore rhythm). Peaked at 145 mg/dL vs my usual 110 mg/dL morning reading.</message>
+            <message sender="Rohan" day="4">Day 3 in SF. Sleep is improving - got 6.5 hours last night with recovery score of 65%. But glucose control is still off. Post-meal spikes are 20-30 mg/dL higher than normal.</message>
+            <message sender="Rohan" day="4">Had client dinner last night at 8 PM (9 AM Singapore time). CGM showed glucose didn't come back to baseline until 2 AM. Is this just circadian disruption or should I adjust food choices during travel?</message>
+            <message sender="Rohan" day="4">HRV stabilizing around 38-42ms. Not my best but better than previous trips without the protocol.</message>
+        </messages>
+    </episode>
+    <episode name="Stomach Ache (Month 4, Week 1)" duration="3 days">
+        <context>Digestive issues, potential food sensitivity, impact on overall metrics</context>
+        <messages>
+            <message sender="Rohan" day="1">Woke up with significant stomach discomfort and nausea. Hadn't felt this way in months. Trying to correlate with yesterday's meals from my food log.</message>
+            <message sender="Rohan" day="1">CGM showing unusual pattern - glucose dropped to 68 mg/dL around 3 AM (woke me up), then spiked to 155 mg/dL after I had some crackers. Usually very stable overnight.</message>
+            <message sender="Rohan" day="1">Whoop data shows sleep was fragmented - 12 wake-ups, only 28 minutes deep sleep. HRV down to 31ms. Could be stress response to whatever's causing the stomach issues.</message>
+            <message sender="Rohan" day="2">Stomach pain persisting. Managed to eat light breakfast (oatmeal) but glucose response was exaggerated - peaked at 175 mg/dL vs usual 125 mg/dL for same meal.</message>
+            <message sender="Rohan" day="2">Carla, looking at my recent food logs - could this be related to the new fiber supplement you recommended? Started it 4 days ago. Also had sushi twice this week, wondering about food safety.</message>
+            <message sender="Rohan" day="2">Strain score is low today (only 6.2) because I can barely manage light walking. Recovery showing yellow at 55% despite trying to rest.</message>
+            <message sender="Rohan" day="3">Feeling 70% better today. Kept to BRAT diet and probiotics. Glucose patterns normalizing - fasting reading back to 85 mg/dL, post-meal spikes more reasonable.</message>
+            <message sender="Rohan" day="3">Sleep improved significantly - 7.2 hours with recovery score of 78%. HRV bounced back to 44ms. Amazing how quickly metrics recover when the underlying issue resolves.</message>
+            <message sender="Rohan" day="3">Should I see a GI specialist or was this likely just a 48-hour bug? Want to avoid missing any underlying issues given my focus on metabolic health.</message>
+        </messages>
+    </episode>
+    <episode name="High Stress Period (Month 5, Week 3)" duration="3 days">
+        <context>Major work deadline, elevated cortisol, impact across all health metrics</context>
+        <messages>
+            <message sender="Rohan" day="1">Entering crunch week for our biggest client acquisition of the year. Stress levels through the roof. Whoop showing strain scores of 18-19 daily even with minimal exercise.</message>
+            <message sender="Rohan" day="1">HRV has been declining steadily - from my usual 45ms baseline to 32ms over the past week. Resting heart rate elevated to 72 bpm. Sleep efficiency dropped to 74%.</message>
+            <message sender="Rohan" day="1">CGM patterns are concerning. Dawn phenomenon much more pronounced - glucose climbing from 85 to 135 mg/dL without eating. Stress hormones definitely affecting metabolic control.</message>
+            <message sender="Rohan" day="2">Had a panic attack yesterday during client presentation - heart rate spiked to 165 bpm for 20 minutes while sitting. Whoop classified it as high strain even though I wasn't exercising.</message>
+            <message sender="Rohan" day="2">Dr. Warren, should I be concerned about the cardiovascular impact? Blood pressure readings at home showing 145/95 vs my usual 125/80. Is this just acute stress response?</message>
+            <message sender="Rohan" day="2">Glucose volatility increasing. Post-meal spikes 30-40 mg/dL higher than normal, and taking longer to come down. Even protein-only meals causing slight elevation.</message>
+            <message sender="Rohan" day="3">Presentation went well, deal is likely to close. Stress beginning to subside but metrics still concerning. Recovery score only 42% despite 7+ hours in bed.</message>
+            <message sender="Rohan" day="3">Tried the breathing exercises Dr. Evans recommended. 10-minute session dropped my heart rate from 78 to 62 bpm - impressive real-time effect visible on Whoop.</message>
+            <message sender="Rohan" day="3">Advik, can you analyze the correlation between my stress markers and glucose control? Want data to present to Dr. Warren about whether I need medication adjustment.</message>
+        </messages>
+    </episode>
+    <episode name="High Blood Pressure Episode (Month 6, Week 2)" duration="3 days">
+        <context>Sustained hypertension, medication considerations, lifestyle interventions</context>
+        <messages>
+            <message sender="Rohan" day="1">Home BP readings concerning me. Three measurements this morning: 155/98, 148/94, 152/96. Usually run 125-130/75-85. No obvious triggers - slept well, low stress day.</message>
+            <message sender="Rohan" day="1">Whoop data doesn't show acute stress. HRV at 43ms (normal), recovery 72%. But resting heart rate has crept up to 68 bpm over past two weeks vs usual 58-62 bpm.</message>
+            <message sender="Rohan" day="1">Dr. Warren, family history of hypertension on father's side. He was on medication by age 50. Am I heading down same path? CGM patterns normal today - fasting 88, post-meal peaks &lt;130.</message>
+            <message sender="Rohan" day="2">BP still elevated. Morning readings: 149/92, 144/89, 147/93. Feeling slight headache and fatigue. This isn't normal for me.</message>
+            <message sender="Rohan" day="2">Correlating with recent data - travel stress from last week, two client dinners with wine, less exercise due to schedule. Could accumulated factors be hitting cardiovascular system?</message>
+            <message sender="Rohan" day="2">Advik, can you analyze my HRV trends over past month? Looking for patterns that might predict these BP elevations before they happen.</message>
+            <message sender="Rohan" day="3">Implemented your suggestions - extra 30-min walk, reduced sodium, meditation before bed. Morning BP improved: 138/87, 135/85, 139/88. Moving in right direction.</message>
+            <message sender="Rohan" day="3">Sleep quality better last night - recovery score 81%, HRV up to 47ms. Interesting correlation between better sleep and lower morning BP readings.</message>
+            <message sender="Rohan" day="3">Dr. Warren, if this doesn't resolve in next few days, should we discuss medication? Want to be proactive given family history, but also explore all lifestyle options first.</message>
+        </messages>
+    </episode>
+    <episode name="Back Ache &amp; Mattress Issues (Month 7, Week 4)" duration="3 days">
+        <context>Sleep disruption from physical discomfort, equipment optimization</context>
+        <messages>
+            <message sender="Rohan" day="1">Woke up with severe lower back pain. Can barely bend over. Sleep data shows I was restless all night - 15 wake-ups, only 35 minutes deep sleep.</message>
+            <message sender="Rohan" day="1">HRV crashed to 28ms, recovery score 31%. Pain definitely triggering stress response. Glucose slightly elevated this morning (102 mg/dL vs usual 85-90 fasting).</message>
+            <message sender="Rohan" day="1">Rachel, this might be related to my mattress. It's 8 years old, and I've been waking up stiff for past few weeks. Could poor sleep surface be affecting recovery metrics?</message>
+            <message sender="Rohan" day="2">Pain persisting. Took ibuprofen which helped mobility but concerned about effects on my health optimization. Sleep position tracking shows I'm changing positions every 20-30 minutes.</message>
+            <message sender="Rohan" day="2">Strain score low (8.1) because I can barely do normal activities. Heart rate variability improving slightly (32ms) but still well below baseline.</message>
+            <message sender="Rohan" day="2">Looking at sleep stage data - REM sleep down 40% compared to 30-day average. Deep sleep only 18% of total sleep vs usual 22-25%. Pain definitely disrupting architecture.</message>
+            <message sender="Rohan" day="3">Ordered the mattress system Ruby researched. Meanwhile, tried sleeping on the floor last night - surprisingly helped. Got 6.8 hours with recovery score of 68%.</message>
+            <message sender="Rohan" day="3">Back pain down 60%. Glucose control normalizing - fasting reading 89 mg/dL, HRV up to 39ms. Amazing how quickly metrics respond to better sleep quality.</message>
+            <message sender="Rohan" day="3">Rachel, want to understand ergonomics of my home office setup too. If mattress was the issue, wondering what else in my environment could be optimized for recovery.</message>
+        </messages>
+    </episode>
+    <episode name="High Sugar + Diet Plan Request (Month 8, Week 2)" duration="4 days">
+        <context>Concerning glucose patterns, proactive nutrition optimization, restaurant recommendations</context>
+        <messages>
+            <message sender="Rohan" day="1">CGM showing concerning patterns this week. Fasting glucose trending higher - 105-115 mg/dL vs my usual 85-95 range. Post-meal spikes reaching 180+ mg/dL.</message>
+            <message sender="Rohan" day="1">Had business lunch yesterday - glucose peaked at 192 mg/dL after pasta dish. Took 4+ hours to return to baseline. This used to resolve in 2 hours max.</message>
+            <message sender="Rohan" day="1">Dr. Warren, is this progression toward diabetes? HbA1c was 5.8% three months ago. Family history of type 2 on mother's side. Feeling concerned about metabolic health.</message>
+            <message sender="Rohan" day="2">Tried the protein-first strategy Carla suggested. Had chicken salad before bread at lunch. Peak glucose 155 mg/dL vs 185 mg/dL when I eat carbs first. Clear difference.</message>
+            <message sender="Rohan" day="2">Sleep and HRV normal (recovery 75%, HRV 44ms) so not stress-related. This seems to be pure dietary response changes. Need systematic approach to meal planning.</message>
+            <message sender="Rohan" day="2">Carla, can you design a specific protocol for my upcoming Singapore meetings? Need restaurant recommendations that align with glucose optimization goals.</message>
+            <message sender="Rohan" day="3">Following your meal timing recommendations. Glucose much more stable - staying in 80-140 mg/dL range throughout day. Time-in-range improved from 68% to 89%.</message>
+            <message sender="Rohan" day="3">Need help with dinner tonight - client meeting at Marina Bay Sands. What restaurants there can accommodate low-glycemic meal preferences? Important deal, can't be too restrictive.</message>
+            <message sender="Rohan" day="3">Ruby, can you research menus and call ahead? Looking for grilled protein, vegetables, minimal processed carbs. Willing to pay premium for customization.</message>
+            <message sender="Rohan" day="4">Dinner was successful - restaurant accommodated perfectly. Glucose peaked at 125 mg/dL after modified fish course. Client didn't even notice the dietary adjustments.</message>
+            <message sender="Rohan" day="4">One week of optimized eating and glucose control is dramatically better. Average glucose down from 135 to 108 mg/dL. Feeling more energy, better cognitive clarity.</message>
+            <message sender="Rohan" day="4">Carla, this protocol works. Can we systematize this approach for my travel schedule? Need portable strategies that work across different cuisines and time zones.</message>
+        </messages>
+    </episode>
+</journey>

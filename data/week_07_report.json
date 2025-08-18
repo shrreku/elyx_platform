@@ -1,8 +1,9 @@
 {
   "week": 7,
   "events": [],
-  "conversations_count": 25,
-  "adherence_rate": 0.7,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Great! I’ll keep an eye on the schedule and will ping you if anything needs adjusting. If you’d like me to set a reminder for the cook or coordinate a follow‑up, just let me know. I’m here to make sure everything runs smoothly and to remove any friction from your day. Let me know how it goes!",
   "health_metrics": {
     "blood_sugar_avg": 168,
     "a1c": 6.0600000000000005,
@@ -10,7 +11,9 @@
   },
   "agent_actions": {
     "doctor_hours": 14,
-    "coach_hours": 12
+    "coach_hours": 15
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Great! I’ll keep an eye on the schedule and will ping you if anything needs adjusting. If you’d like me to set a reminder for the cook or coordinate a follow‑up, just let me know. I’m here to make sur..."
+  ]
 }

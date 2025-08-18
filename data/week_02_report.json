@@ -3,16 +3,19 @@
   "events": [
     "exercise_plan_update"
   ],
-  "conversations_count": 15,
+  "conversations_count": 2,
   "adherence_rate": 0.3,
+  "agent_response": "Ruby: Hi there! I’ve noted the time you confirmed and have added the exercise plan update to your calendar. You’ll receive a calendar invite shortly.  \nIf there’s anything specific you’d like to focus on—strength, cardio, flexibility—or any new goals you have, just let me know and I’ll tailor the plan accordingly.  \nFeel free to reach out if you need any tweaks or have questions before our session. Looking forward to helping you hit your fitness targets!",
   "health_metrics": {
     "blood_sugar_avg": 178,
     "a1c": 6.16,
     "weight": 75
   },
   "agent_actions": {
-    "doctor_hours": 14,
-    "coach_hours": 11
+    "doctor_hours": 15,
+    "coach_hours": 20
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! I’ve noted the time you confirmed and have added the exercise plan update to your calendar. You’ll receive a calendar invite shortly.  \nIf there’s anything specific you’d like to focus on—st..."
+  ]
 }

@@ -3,16 +3,19 @@
   "events": [
     "exercise_plan_update"
   ],
-  "conversations_count": 25,
-  "adherence_rate": 0.8,
+  "conversations_count": 2,
+  "adherence_rate": 0.7,
+  "agent_response": "Ruby: Thanks for letting me know! I’ve forwarded the exercise plan update to your cook and will ping you once they confirm. In the meantime, let’s keep your nutrition aligned—if you’d like, I can suggest a few meal tweaks that pair well with your new workouts. Also, I’ll set a reminder for our next check‑in on [date] to review progress. If anything changes or you have questions, just drop me a note. Looking forward to hearing how it goes!",
   "health_metrics": {
     "blood_sugar_avg": 138,
     "a1c": 5.76,
     "weight": 72.8
   },
   "agent_actions": {
-    "doctor_hours": 9,
-    "coach_hours": 10
+    "doctor_hours": 13,
+    "coach_hours": 11
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thanks for letting me know! I’ve forwarded the exercise plan update to your cook and will ping you once they confirm. In the meantime, let’s keep your nutrition aligned—if you’d like, I can suggest a ..."
+  ]
 }

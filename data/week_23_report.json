@@ -1,8 +1,9 @@
 {
   "week": 23,
   "events": [],
-  "conversations_count": 20,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Hi there! Thank you for letting me know— I’m glad the suggestions are helpful. When you’re ready to dive in, just drop me a quick note with the dates or tasks you’re tackling. I can slot them into your calendar, set reminders, or flag any potential roadblocks so you stay on track. If you’d like, I can also arrange a brief mid‑week check‑in to review progress and tweak plans as needed. Feel free to reach out anytime; I’m here to keep the friction out of your week. Looking forward to hearing how it goes!",
   "health_metrics": {
     "blood_sugar_avg": 136,
     "a1c": 5.74,
@@ -10,7 +11,9 @@
   },
   "agent_actions": {
     "doctor_hours": 14,
-    "coach_hours": 18
+    "coach_hours": 19
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! Thank you for letting me know— I’m glad the suggestions are helpful. When you’re ready to dive in, just drop me a quick note with the dates or tasks you’re tackling. I can slot them into you..."
+  ]
 }

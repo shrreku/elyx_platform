@@ -4,16 +4,19 @@
     "onboarding_complete",
     "initial_blood_test_high_sugar"
   ],
-  "conversations_count": 23,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Thank you for the update! I’ve forwarded your meal preferences to your cook and confirmed the low‑carb, high‑fiber menu. We’ll keep an eye on your glucose readings, and I’ll send a gentle reminder to log your meals and blood sugar at the start and end of each day. If you notice any spikes or feel anything off, just let me know and we can tweak the plan right away. I’ve set a quick check‑in for next Tuesday at 10 AM—if that time works for you, I’ll send a calendar invite. Otherwise, feel free to suggest a better slot. Looking forward to hearing how it goes!",
   "health_metrics": {
     "blood_sugar_avg": 180,
     "a1c": 6.180000000000001,
     "weight": 75
   },
   "agent_actions": {
-    "doctor_hours": 11,
-    "coach_hours": 13
+    "doctor_hours": 14,
+    "coach_hours": 14
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thank you for the update! I’ve forwarded your meal preferences to your cook and confirmed the low‑carb, high‑fiber menu. We’ll keep an eye on your glucose readings, and I’ll send a gentle reminder to ..."
+  ]
 }

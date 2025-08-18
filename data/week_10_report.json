@@ -3,16 +3,19 @@
   "events": [
     "leg_injury_reported"
   ],
-  "conversations_count": 25,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.7,
+  "agent_response": "Ruby: Great! I’ve confirmed your appointment for **[date] at [time]** and added it to your calendar. I’ll send a confirmation email with the exact location (or virtual link) and note any special accommodations for your leg injury—such as wheelchair‑accessible seating or a longer break if needed.  \n\nIf you’d like a reminder 24 hours before or a quick prep checklist, just let me know and I’ll set it up. I’ll keep everything organized and stay on top of any changes. Feel free to reach out if there’s anything else you need. Looking forward to seeing you!",
   "health_metrics": {
     "blood_sugar_avg": 162,
     "a1c": 6.0,
     "weight": 74.0
   },
   "agent_actions": {
-    "doctor_hours": 14,
-    "coach_hours": 12
+    "doctor_hours": 9,
+    "coach_hours": 17
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Great! I’ve confirmed your appointment for **[date] at [time]** and added it to your calendar. I’ll send a confirmation email with the exact location (or virtual link) and note any special accommodati..."
+  ]
 }

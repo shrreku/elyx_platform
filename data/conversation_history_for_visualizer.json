@@ -1,0 +1,394 @@
+{
+  "total_messages": 38,
+  "simulation_period": "8 months",
+  "conversation_history": [
+    {
+      "S.No.": 1,
+      "Sender": "Rohan",
+      "Message": "Just completed today's exercise, felt stable. HR zones seemed fine.",
+      "Day": 1,
+      "Date": "2024-12-18",
+      "Time": "09:15:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 2,
+      "Sender": "Advik",
+      "Message": "Great to hear you felt stable and your HR zones were on target today! Your recent blood test flagged elevated fasting glucose, so let’s treat that as a hypothesis that dietary carbs may be influencing your recovery and training readiness.  \n\n**Next steps:**\n1. **Nutrition:** Log all meals and note glycemic index; aim for a lower‑GI spread (e.g., whole grains, legumes, veggies).  \n2. **Training:** Keep the intensity similar but add a light recovery session (e.g., 20‑30 min brisk walk) to monitor HRV response.  \n3. **Recovery:** Prioritize 7–8 h sleep, hydrate, and consider a post‑exercise cool‑down stretch to support HRV.  \n\nTrack HRV and glucose‑related symptoms for the next week; we’ll adjust the plan based on what the data shows. Keep up the good work!",
+      "Day": 32,
+      "Date": "2025-01-18",
+      "Time": "10:05:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 3,
+      "Sender": "Rohan",
+      "Message": "Got it! I'll share these details with my cook and let you know how it goes.",
+      "Day": 63,
+      "Date": "2025-02-18",
+      "Time": "11:20:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 4,
+      "Sender": "Ruby",
+      "Message": "Hi there! I’ve noted that you’ll be sharing the meal details with your cook. I’ll coordinate with the kitchen team to ensure the menu aligns with your dietary goals, especially considering the high sugar reading from your initial blood test. I’ll confirm the prep schedule and let you know the estimated delivery time. Meanwhile, if you’d like to tweak any ingredients or have special preferences, just let me know—your comfort and nutrition are my top priority. Once the meal is on its way, I’ll follow up to confirm everything meets your expectations. Feel free to reach out with any questions or additional requests.",
+      "Day": 91,
+      "Date": "2025-03-18",
+      "Time": "09:45:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 5,
+      "Sender": "Rohan",
+      "Message": "Made some progress on Zone 2 cardio today. Felt dizzy around 30min, need advice.",
+      "Day": 122,
+      "Date": "2025-04-18",
+      "Time": "08:55:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 6,
+      "Sender": "Ruby",
+      "Message": "Hi there! It’s great to hear you’re moving into Zone 2 cardio—keep it up! Feeling dizzy after ~30 min can be a sign of low blood sugar or dehydration, especially with a recent high‑sugar reading. Here’s a quick action plan:\n\n1. **Check your glucose** right before you start and again at 25–30 min. Aim for 100–140 mg/dL.  \n2. **Hydrate** with water or an electrolyte drink; a 12‑oz cup every 10–15 min can help.  \n3. **Adjust intensity**: drop to a 1‑2 % lower heart‑rate target or shorten the session until you feel steadier.  \n4. **Snack**: a small carb (e.g., a banana or ½ cup of juice) after a 30‑min break can stabilize levels.  \n5. **Listen to your body**: if dizziness persists, pause exercise and rest in a cool spot.  \n\nIf these tweaks don’t help or you notice frequent lows/hits, let’s schedule a quick check‑in with your healthcare provider. You’ve got this—stay safe and keep up the great work!",
+      "Day": 152,
+      "Date": "2025-05-18",
+      "Time": "14:00:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 7,
+      "Sender": "Rohan",
+      "Message": "Thanks for the guidance. I'll implement these suggestions and keep you posted on my progress.",
+      "Day": 183,
+      "Date": "2025-06-18",
+      "Time": "07:50:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 8,
+      "Sender": "Ruby",
+      "Message": "Hey there! 🎉 I’m thrilled you’re ready to put the plan into action. I’ve scheduled a quick check‑in call for **Tuesday at 10 AM** to review how things are going and tweak anything that’s needed. In the meantime, here’s a quick recap:\n\n1. **Track your meals** – use the app’s diary feature; we’ll flag any high‑sugar spikes.  \n2. **Daily walk** – aim for 30 min; add a 5‑min stretch after.  \n3. **Blood sugar log** – record fasting and post‑meal readings; we’ll review the trend.  \n4. **Hydration** – 8 cups a day; set a reminder if you forget.\n\nFeel free to ping me anytime with questions or updates. You’ve got this, and I’m here to keep the friction out of your journey!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 9,
+      "Sender": "Rohan",
+      "Message": "Good morning! Just completed my initial onboarding yesterday. Ready to start this journey. <Garmin data: Sleep score 78, HRV 42ms, Resting HR 68 bpm, Stress level: Medium>. Had my morning 20-min routine - feeling energetic. When can we schedule my first comprehensive assessment?",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": true,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 10,
+      "Sender": "Ruby",
+      "Message": "Hi! Congrats on completing onboarding—great start! I’ve noted your high‑sugar result from the initial blood test. To tailor your plan, we’ll schedule a 60‑minute comprehensive assessment. How about next Tuesday (May 14) at 10 am or Thursday (May 16) at 2 pm? Let me know which slot works, or I can offer a different time. You can confirm via the app or reply to this message. Please bring the blood test results (or upload them in the member portal) so we can review them together. After the assessment, we’ll set personalized goals for nutrition, activity, sleep, and stress. Looking forward to guiding you on this journey!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": true,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 11,
+      "Sender": "Rohan",
+      "Message": "Perfect, that time works for me. I'll confirm and add it to my calendar.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 12,
+      "Sender": "Ruby",
+      "Message": "Great! I’ve added the appointment to your calendar and sent a confirmation email. Please review the attached prep guide and bring your recent blood test results. If you need to reschedule or have any questions, just let me know. Looking forward to speaking with you on [date/time].",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 13,
+      "Sender": "Rohan",
+      "Message": "I have a travel coming up to Seoul next week. Planning for jet lag management and travel-friendly alternatives.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 14,
+      "Sender": "Ruby",
+      "Message": "Hi! For your Seoul trip, let’s keep your blood sugar stable and beat jet lag.  \n**Pre‑flight**: Eat a balanced meal with protein, healthy fats, and complex carbs 2–3 h before boarding. Bring glucose tablets and a small snack in case of dips.  \n**During flight**: Stay hydrated with water (avoid excess caffeine). Use a reusable water bottle and sip regularly. If your flight crosses 3+ time zones, take 0.5–1 mg melatonin 30 min before “bedtime” in Seoul (consult your provider).  \n**Arrival**: Aim for a 7‑8 pm local bedtime; expose yourself to bright light in the morning and dim lights in the evening to reset your circadian rhythm.  \n**Travel‑friendly meals**: Ask for grilled, steamed or steamed‑style dishes, avoid fried foods, and request a small side of fresh fruit.  \n**Follow‑up**: Let me know if you need a medication reminder schedule or a local pharmacy recommendation. Safe travels!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": true,
+      "Recommendations": [
+        "Hi! For your Seoul trip, let’s keep your blood sugar stable and beat jet lag.  \n**Pre‑flight**: Eat a balanced meal with protein, healthy fats, and complex carbs 2–3 h before boarding. Bring glucose tablets and a small snack in case of dips.  \n**During flight**: Stay hydrated with water (avoid excess caffeine). Use a reusable water bottle and sip regularly. If your flight crosses 3+ time zones, take 0.5–1 mg melatonin 30 min before “bedtime” in Seoul (consult your provider).  \n**Arrival**: Aim for a 7‑8 pm local bedtime; expose yourself to bright light in the morning and dim lights in the evening to reset your circadian rhythm.  \n**Travel‑friendly meals**: Ask for grilled, steamed or steamed‑style dishes, avoid fried foods, and request a small side of fresh fruit.  \n**Follow‑up**: Let me know if you need a medication reminder schedule or a local pharmacy recommendation. Safe travels!"
+      ]
+    },
+    {
+      "S.No.": 15,
+      "Sender": "Rohan",
+      "Message": "Got it! I'll share these details with my cook and let you know how it goes.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 16,
+      "Sender": "Ruby",
+      "Message": "Great! I’ve noted that you’re passing the meal plan details to your cook. I’ll add a reminder to follow up on your next blood test in 2 weeks and share a quick review of your current targets (fasting glucose < 100 mg/dL, A1C < 6.5%). If you’d like, I can also suggest a low‑glycemic snack list or set a notification to log your post‑meal glucose. Let me know if you need any adjustments or want to schedule a check‑in with your health coach. I’ll keep everything organized and will ping you once the cook confirms the menu.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": true,
+      "Recommendations": [
+        "Great! I’ve noted that you’re passing the meal plan details to your cook. I’ll add a reminder to follow up on your next blood test in 2 weeks and share a quick review of your current targets (fasting glucose < 100 mg/dL, A1C < 6.5%). If you’d like, I can also suggest a low‑glycemic snack list or set a notification to log your post‑meal glucose. Let me know if you need any adjustments or want to schedule a check‑in with your health coach. I’ll keep everything organized and will ping you once the cook confirms the menu."
+      ]
+    },
+    {
+      "S.No.": 17,
+      "Sender": "Rohan",
+      "Message": "Quick question about the meal plan you sent. My cook is asking about portion sizes for the Mediterranean-style breakfast. <Yesterday's metrics: Steps 8,432, Active calories 347, Sleep 6h 45m>",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 18,
+      "Sender": "Advik",
+      "Message": "Hi! For a Mediterranean‑style breakfast that keeps blood sugar in check, aim for these portions:\n\n| Item | Portion | Notes |\n|------|---------|-------|\n| Whole‑grain toast | 1 slice (≈30 g) | Choose a low‑glycemic loaf. |\n| Avocado | ½ medium | Provides healthy fats & satiety. |\n| Scrambled or poached eggs | 2 large | Protein + healthy fats; keep seasoning minimal. |\n| Greek yogurt (non‑fat, plain) | 1 cup (≈225 g) | No added sugar; good protein. |\n| Mixed berries (blueberries, raspberries) | ½ cup (≈75 g) | Low‑glyc, antioxidant‑rich. |\n| Olive oil drizzle | 1 tsp (≈5 mL) | Extra monounsaturated fat. |\n| Optional: sprinkle of chia seeds or nuts | 1 Tbsp | Adds fiber & omega‑3s. |\n\n**Why this works:**  \n- Total carbs ≈ 35–40 g, mainly from fiber‑rich bread and berries, keeping the glycemic load low.  \n- Protein and healthy fats help blunt post‑meal glucose spikes—ideal after your high‑sugar test.  \n- The mix supports satiety so you’re less likely to over‑eat later.  \n\nAdjust the portions slightly if you’re aiming for a specific calorie goal or if your activity level changes. Enjoy!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 19,
+      "Sender": "Rohan",
+      "Message": "Got it! I'll share these details with my cook and let you know how it goes.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 20,
+      "Sender": "Ruby",
+      "Message": "Hi! Thanks for letting me know you’ll pass the details along to your cook. I’ve flagged the high‑sugar result from your initial blood test, so I’ll coordinate with our nutritionist to tweak the meal plan for optimal blood sugar control. I’ll send the updated menu to the cook and confirm receipt. We’ll schedule a follow‑up call in two weeks to review your progress and adjust as needed. If you have any immediate concerns or would like a different prep style, just let me know and I’ll arrange it right away. Your well‑being is my priority, and I’m here to smooth every step of the way!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 21,
+      "Sender": "Rohan",
+      "Message": "Planning to start piano practice as part of my cognitive health plan.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 22,
+      "Sender": "Ruby",
+      "Message": "Hi! That’s a fantastic addition to your cognitive plan. Let’s make it smooth: 1️⃣ Set a weekly goal—e.g., 3 × 30‑min sessions. 2️⃣ Use the “Piano Practice” reminder in your Elyx app (or set a phone alarm) to keep you on track. 3️⃣ Log each session’s duration and any notes on mood or energy; the app will track progress for your physician. 4️⃣ If you need a tutor or sheet music, I can recommend local lessons or free resources like musictheory.net. 5️⃣ Pair practice with a short walk afterward—helps glucose regulation and brain oxygenation. Would you like me to schedule your first session and set reminders? Let me know if you’d like any resource links or a follow‑up check‑in next week. Happy practicing!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": true,
+      "Recommendations": [
+        "Hi! That’s a fantastic addition to your cognitive plan. Let’s make it smooth: 1️⃣ Set a weekly goal—e.g., 3 × 30‑min sessions. 2️⃣ Use the “Piano Practice” reminder in your Elyx app (or set a phone alarm) to keep you on track. 3️⃣ Log each session’s duration and any notes on mood or energy; the app will track progress for your physician. 4️⃣ If you need a tutor or sheet music, I can recommend local lessons or free resources like musictheory.net. 5️⃣ Pair practice with a short walk afterward—helps glucose regulation and brain oxygenation. Would you like me to schedule your first session and set reminders? Let me know if you’d like any resource links or a follow‑up check‑in next week. Happy practicing!"
+      ]
+    },
+    {
+      "S.No.": 23,
+      "Sender": "Rohan",
+      "Message": "I'll set up this routine and stick to it consistently.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 24,
+      "Sender": "Ruby",
+      "Message": "Thank you for committing to this routine—consistency is key to managing blood sugar. Here’s a quick plan for the next week:  \n1️⃣ **Morning:** 8 am blood glucose check, followed by a balanced breakfast (protein + fiber).  \n2️⃣ **Mid‑day:** 12 pm walk (15‑20 min) and a 1‑oz snack if the level dips below 100.  \n3️⃣ **Evening:** 6 pm glucose check, light dinner (vegetables + lean protein), and a short stretch.  \n4️⃣ **Daily:** Log readings, meals, and activity in your app.  \n\nI’ll set calendar reminders for each check‑in and share a printable schedule. We’ll review your data next week to tweak the routine. You’ve got this—let me know if anything feels off or you need adjustments.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 25,
+      "Sender": "Rohan",
+      "Message": "Good morning! Garmin sleep score is 80 and HRV is 36ms today.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 26,
+      "Sender": "Advik",
+      "Message": "Good morning! Your Garmin sleep score of 80 shows solid recovery tonight, and an HRV of 36 ms is within a healthy range for a week‑2 training phase. With the recent exercise‑plan update, it’s likely that the increased load is influencing your autonomic balance.  \n\n**What to do next**  \n- **Prioritize active recovery** (light cardio, mobility, or a gentle swim) if you feel any lingering fatigue.  \n- **Hydrate and fuel** with a protein‑carbohydrate mix within 30 min of training to support muscle repair.  \n- **Monitor HRV trend**: aim to see a shift above 40 ms in the coming days; a dip below 35 ms may signal the need for a lighter session or additional rest.  \n- **Incorporate a 5‑minute breathing or mindfulness session** before bed to optimize parasympathetic tone.  \n\nKeep tracking, and let me know how the next few days look!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 27,
+      "Sender": "Rohan",
+      "Message": "Understood. I'll implement these changes and track my progress.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 28,
+      "Sender": "Ruby",
+      "Message": "That’s great! I’ve updated your exercise plan for Week 2 and set a reminder for your 45‑minute workout tomorrow at 7 AM. When you finish each session, just reply with “Done” or tap the check‑mark in the app to log it. I’ll send you a quick recap at the end of each day so you can see your streak and progress. If you’d like to tweak any part of the plan or add a new goal, just let me know. I’m here to keep everything smooth and friction‑free for you. Happy training!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 29,
+      "Sender": "Rohan",
+      "Message": "Just landed in Seoul. Long flight, feeling jet-lagged. <Current metrics: Stress level High, HRV dropped to 35ms, Sleep debt 2h 15m>. Should I adjust the morning routine timing while here?",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": true,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 30,
+      "Sender": "Advik",
+      "Message": "Jet‑lag and a high‑stress state have knocked your HRV to 35 ms and left a 2 h 15 min sleep debt. To reset your circadian rhythm and support recovery, shift your morning routine to align with Seoul time (≈ 3 h earlier than home). Aim to wake at 6:00 CET (9:00 KST), open bright windows or use a light box for 20 min, then do a short, low‑intensity warm‑up (10–15 min walk/stretch). Keep caffeine after 10 am KST and hydrate well. This timing will cue your body clock, reduce stress, and allow HRV to rebound faster. Expect a 5–10 ms HRV lift within 48 h if you maintain the routine and limit late‑night screens.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 31,
+      "Sender": "Rohan",
+      "Message": "Understood. I'll implement these changes and track my progress.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 32,
+      "Sender": "Ruby",
+      "Message": "Hey! Great to hear you’re on board. I’ll log the updated exercise plan for Week 2 and set a reminder to review your progress on Thursday. I’ll send you a quick progress tracker template so you can log workouts and feel the momentum. Let me know if you’d like a mid‑week check‑in call or a tweak to the routine. Keep up the good work—your consistency is key!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 33,
+      "Sender": "Rohan",
+      "Message": "CGM spike observed after breakfast, glucose peaked at 110.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 34,
+      "Sender": "Carla",
+      "Message": "Great job noting the spike! A peak of 110 mg/dL is still within normal limits, but if it feels uncomfortable or you’re aiming for tighter control, a few tweaks can help.  \n\n**Breakfast composition:**  \n- Swap high‑glycemic carbs (white toast, sugary cereal) for lower‑GI foods—steel‑cut oats, whole‑grain toast, or a small bowl of berries.  \n- Add protein or healthy fat (Greek yogurt, a boiled egg, a spoonful of nut butter) to slow digestion.  \n- Include a fiber source (chia seeds, flaxseed, or a handful of nuts).  \n\n**Exercise timing:**  \nYour updated exercise plan is a great tool. A short 10–15‑minute brisk walk or light cardio right after breakfast can blunt the spike by increasing glucose uptake.  \n\n**Behavioral cue:** Pair your breakfast with a routine—e.g., “coffee + walk” or “lunch + stretch”—to make the change automatic.  \n\nTrack the next few days’ CGM; we’ll adjust if the pattern persists. You’re on the right track!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 35,
+      "Sender": "Rohan",
+      "Message": "Got it! I'll share these details with my cook and let you know how it goes.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 36,
+      "Sender": "Ruby",
+      "Message": "Great! Let me know if you need any adjustments to the plan or any recipe suggestions that align with the new exercise routine. I'm here to support you. When you get a chance, share your feedback so we can fine‑tune. Also, if you'd like to schedule a quick check‑in or have any questions, just let me know. Happy to help!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": true,
+      "Recommendations": [
+        "Great! Let me know if you need any adjustments to the plan or any recipe suggestions that align with the new exercise routine. I'm here to support you. When you get a chance, share your feedback so we can fine‑tune. Also, if you'd like to schedule a quick check‑in or have any questions, just let me know. Happy to help!"
+      ]
+    },
+    {
+      "S.No.": 37,
+      "Sender": "Rohan",
+      "Message": "CGM spike observed after breakfast, glucose peaked at 137.",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    },
+    {
+      "S.No.": 38,
+      "Sender": "Carla",
+      "Message": "Hi! A 137‑mg/dL spike after breakfast is a moderate rise—good news that your glucose is still within a healthy range, but it’s a cue to tweak the meal a bit.  \n**Why it happened:**  \n– High‑glycemic carbs (e.g., white toast, sugary cereal) raise blood sugar quickly.  \n– Limited protein, fiber, and healthy fats slow absorption, giving a steadier rise.  \n\n**What to try next week (with your new exercise plan):**  \n1. **Swap carbs for lower‑GI options**: oatmeal, whole‑grain toast, or a small fruit portion.  \n2. **Add protein**: Greek yogurt, a boiled egg, or a scoop of plant‑based protein powder.  \n3. **Include healthy fat**: a tablespoon of nut butter, avocado, or a handful of nuts.  \n4. **Pair with a brisk 10‑min walk** soon after eating—this boosts insulin sensitivity and can blunt the peak.  \n\n**Supplement note:** A 200‑mg magnesium supplement can help moderate glucose spikes, especially if you’re training hard.  \n\nKeep tracking; we’ll adjust as we see how these changes affect your CGM trends. Great progress—keep it up!",
+      "Day": 213,
+      "Date": "2025-07-18",
+      "Time": "20:10:00",
+      "Reply_Needed": false,
+      "Recommendations": []
+    }
+  ]
+}

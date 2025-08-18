@@ -1,8 +1,9 @@
 {
   "week": 11,
   "events": [],
-  "conversations_count": 15,
-  "adherence_rate": 0.3,
+  "conversations_count": 2,
+  "adherence_rate": 0.5,
+  "agent_response": "Ruby: Hi there! Glad the tips were helpful. As you tweak your schedule, I can set up gentle reminders for packing milestones, visa check‑ins, or any last‑minute travel updates. If you’d like, I can also draft a quick “pre‑departure checklist” or sync your itinerary with your calendar. Just let me know what you need, and I’ll take care of the rest—so you can focus on enjoying the trip. Safe travels!",
   "health_metrics": {
     "blood_sugar_avg": 160,
     "a1c": 5.98,
@@ -10,7 +11,9 @@
   },
   "agent_actions": {
     "doctor_hours": 13,
-    "coach_hours": 20
+    "coach_hours": 15
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! Glad the tips were helpful. As you tweak your schedule, I can set up gentle reminders for packing milestones, visa check‑ins, or any last‑minute travel updates. If you’d like, I can also dra..."
+  ]
 }

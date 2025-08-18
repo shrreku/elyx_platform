@@ -1,0 +1,19 @@
+{
+  "week": 35,
+  "events": [],
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Hi! That’s fantastic to hear. I’m here to make sure your implementation goes smoothly—just let me know if you need a quick checklist, reminders, or help with any logistics. Whenever you’re ready to share your progress, I’ll be ready to celebrate the wins and adjust the plan if needed. Looking forward to hearing how it goes!",
+  "health_metrics": {
+    "blood_sugar_avg": 120,
+    "a1c": 5.5,
+    "weight": 71.5
+  },
+  "agent_actions": {
+    "doctor_hours": 12,
+    "coach_hours": 11
+  },
+  "recommendations": [
+    "Ruby: Hi! That’s fantastic to hear. I’m here to make sure your implementation goes smoothly—just let me know if you need a quick checklist, reminders, or help with any logistics. Whenever you’re ready to sh..."
+  ]
+}

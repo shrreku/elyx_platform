@@ -1,9 +1,8 @@
 import random
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from data.persistence import PersistenceManager
 from agents.group_chat import GroupChatSystem
-
 
 class JourneyOrchestrator:
     def __init__(self):
@@ -11,11 +10,15 @@ class JourneyOrchestrator:
         self.chat_system = GroupChatSystem()
         self.current_state = self.persistence.load_journey_state()
 
-    def simulate_week(self, week: int) -> Dict:
+    def simulate_week(self, week: int, user_message: Optional[str] = None) -> Dict:
         print(f"=== Simulating Week {week} ===")
 
         events = self.generate_weekly_events(week)
-        user_messages = self.generate_user_messages(week, events)
+
+        if user_message:
+            user_messages = [user_message]
+        else:
+            user_messages = self.generate_user_messages(week, events)
 
         weekly_conversations: List[Dict] = []
         for message in user_messages:
@@ -70,11 +73,19 @@ class JourneyOrchestrator:
     def generate_weekly_report(self, week: int, events: List[str], conversations: List[Dict]) -> Dict:
         adherence = random.choice([0.3, 0.5, 0.7, 0.8])
         blood_sugar_improvement = max(0, (week - 1) * 2)
+        
+        # Extract agent responses from conversations
+        agent_responses = []
+        for conv in conversations:
+            if conv.get("sender") != "Rohan":
+                agent_responses.append(f"{conv['sender']}: {conv['message']}")
+        
         return {
             "week": week,
             "events": events,
             "conversations_count": len(conversations),
             "adherence_rate": adherence,
+            "agent_response": "; ".join(agent_responses) if agent_responses else "No agent response",
             "health_metrics": {
                 "blood_sugar_avg": max(120, 180 - blood_sugar_improvement),
                 "a1c": max(5.5, 6.2 - (week * 0.02)),
@@ -88,10 +99,46 @@ class JourneyOrchestrator:
         }
 
     def extract_recommendations(self, conversations: List[Dict]) -> List[str]:
-        recommendations: List[str] = []
+        recommendations = []
         for conv in conversations:
-            if conv.get("sender") != "Rohan" and "recommend" in conv.get("message", "").lower():
-                recommendations.append(f"{conv['sender']}: {conv['message'][:100]}...")
+            if conv.get("sender") != "Rohan":
+                message = conv.get("message", "").lower()
+                sender = conv.get("sender", "")
+                
+                # Look for actionable content patterns
+                action_patterns = [
+                    "schedule", "book", "order", "call", "email", "confirm", "arrange",
+                    "test", "measure", "track", "monitor", "adjust", "change", "try",
+                    "implement", "start", "begin", "continue", "follow up", "review",
+                    "set up", "bring", "pencil in", "send", "add", "create", "plan",
+                    "consider", "aim for", "target", "goal", "focus on", "practice",
+                    "exercise", "workout", "session", "routine", "protocol", "diet",
+                    "meal", "nutrition", "supplement", "medication", "appointment",
+                    "consultation", "assessment", "evaluation", "check-in", "reminder"
+                ]
+                
+                # Check if message contains actionable content
+                has_actionable_content = any(pattern in message for pattern in action_patterns)
+                
+                # Also check for specific time references and concrete next steps
+                time_patterns = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+                               "am", "pm", "morning", "afternoon", "evening", "tonight", "tomorrow",
+                               "next week", "this week", "daily", "weekly", "monthly"]
+                
+                has_time_reference = any(pattern in message for pattern in time_patterns)
+                
+                # Check for specific quantities and measurements
+                quantity_patterns = ["2 large eggs", "1 cup", "30-45 min", "7-8h", "100-150 mg/dl",
+                                   "60-70%", "15-30 min", "3-4 days", "1-2 hrs"]
+                
+                has_quantities = any(pattern in message for pattern in quantity_patterns)
+                
+                # If message has actionable content, time references, or specific quantities, it's a recommendation
+                if has_actionable_content or has_time_reference or has_quantities:
+                    # Truncate long messages but keep the actionable part
+                    truncated_msg = conv['message'][:200] + "..." if len(conv['message']) > 200 else conv['message']
+                    recommendations.append(f"{sender}: {truncated_msg}")
+        
         return recommendations
 
     def run_full_journey(self):

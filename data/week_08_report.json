@@ -3,16 +3,19 @@
   "events": [
     "business_travel"
   ],
-  "conversations_count": 15,
+  "conversations_count": 2,
   "adherence_rate": 0.8,
+  "agent_response": "Ruby: Hi there! I’ve added the confirmed slot to your calendar and sent a formal invite with all the details. If you need any travel arrangements, accommodations, or additional meeting materials for your business trip, just let me know and I’ll handle it right away. I’ll ping you a reminder a day before the event, and I’ll be on hand to support you throughout the week. Thanks for confirming—looking forward to a smooth and productive meeting!",
   "health_metrics": {
     "blood_sugar_avg": 166,
     "a1c": 6.04,
     "weight": 74.2
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 10
+    "doctor_hours": 8,
+    "coach_hours": 15
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! I’ve added the confirmed slot to your calendar and sent a formal invite with all the details. If you need any travel arrangements, accommodations, or additional meeting materials for your bu..."
+  ]
 }

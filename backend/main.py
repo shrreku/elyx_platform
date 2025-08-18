@@ -1,9 +1,14 @@
 import os
+import warnings
 from typing import Dict, Optional, List
 
 from fastapi import FastAPI
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+
+# Suppress TracerProvider warnings
+warnings.filterwarnings("ignore", message="Overriding of current TracerProvider is not allowed")
+warnings.filterwarnings("ignore", category=UserWarning, module="opentelemetry")
 from pydantic import BaseModel
 
 from agents.elyx_agents import AgentOrchestrator, UrgencyDetector, AGENT_ROLES
@@ -175,6 +180,28 @@ class ExperimentMeasurementIn(BaseModel):
     raw_json: Optional[Dict] = None
 
 
+class SimulationRequest(BaseModel):
+    xml_content: str
+
+@app.post("/simulation/run")
+def run_simulation(req: SimulationRequest):
+    from fastapi import HTTPException
+
+    if not req.xml_content or not req.xml_content.strip():
+        # If frontend didn't provide XML, return a clear error
+        raise HTTPException(status_code=400, detail="xml_content is required in the request body")
+
+    try:
+        # Initialize and run the simulation
+        from simulation.complete_journey import CompleteJourney
+        journey = CompleteJourney(xml_content=req.xml_content)
+        results = journey.run()
+        return results
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("Simulation run failed")
+        # Return a helpful error message to the frontend while preserving server logs
+        raise HTTPException(status_code=500, detail=f"Simulation failed: {str(exc)}")
+
 @app.get("/health")
 def health():
     return {"status": "ok", "model": os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-exp:free")}
@@ -191,13 +218,27 @@ def debug_config():
 
 @app.get("/history")
 def get_history():
-    return persistence.load_conversation_history()
+    conversation_history = persistence.load_conversation_history()
+    
+    # Ensure conversation_history is always a list
+    if not isinstance(conversation_history, list):
+        logging.warning("conversation_history is not a list in /history, converting from %s", type(conversation_history))
+        if isinstance(conversation_history, dict):
+            # If it's a dict, try to extract messages or create empty list
+            if 'messages' in conversation_history:
+                conversation_history = conversation_history['messages']
+            else:
+                conversation_history = []
+        else:
+            conversation_history = []
+    
+    return conversation_history
 
 
 @app.post("/reset")
 def reset_history():
     persistence.save_conversation_history([])
-    group_chat.conversation_history = []
+    # group_chat.conversation_history = [] # This line was removed as group_chat is not defined
     # also clear sqlite tables for suggestions and issues
     try:
         import sqlite3
@@ -255,6 +296,22 @@ def chat(req: ChatRequest):
     
     # Load conversation history
     conversation_history = persistence.load_conversation_history()
+    logging.info("Loaded conversation_history type: %s, value: %s", type(conversation_history), conversation_history[:2] if isinstance(conversation_history, list) else conversation_history)
+    
+    # Ensure conversation_history is always a list
+    if not isinstance(conversation_history, list):
+        logging.warning("conversation_history is not a list, converting from %s", type(conversation_history))
+        if isinstance(conversation_history, dict):
+            # If it's a dict, try to extract messages or create empty list
+            if 'messages' in conversation_history:
+                conversation_history = conversation_history['messages']
+                logging.info("Extracted messages from dict: %s", conversation_history[:2] if isinstance(conversation_history, list) else conversation_history)
+            else:
+                conversation_history = []
+                logging.info("No messages key found in dict, using empty list")
+        else:
+            conversation_history = []
+            logging.info("conversation_history was not dict or list, using empty list")
     
     # Append user message
     conversation_history.append({
@@ -668,6 +725,27 @@ def api_episodes_list():
     return episodes_list()
 
 
+@app.get("/messages")
+async def get_messages():
+    """Get all messages from conversation history"""
+    try:
+        # Get messages from the chat system if available
+        if crewai_orchestrator and hasattr(crewai_orchestrator, 'chat_system'):
+            history = crewai_orchestrator.chat_system.get_conversation_history()
+            return {"messages": history, "total": len(history)}
+        else:
+            # Fallback to episodes if chat system not available
+            episodes = episodes_list()
+            messages = []
+            for episode in episodes:
+                if 'messages' in episode:
+                    messages.extend(episode['messages'])
+            return {"messages": messages, "total": len(messages)}
+    except Exception as e:
+        logging.error(f"Error getting messages: {e}")
+        return {"messages": [], "total": 0, "error": str(e)}
+
+
 @app.post("/episodes")
 def api_episodes_create(ep: EpisodeIn):
     payload = {
@@ -938,6 +1016,19 @@ def api_generate_mock_data():
             
         # Add messages to conversation history
         conversation_history = persistence.load_conversation_history()
+        
+        # Ensure conversation_history is always a list
+        if not isinstance(conversation_history, list):
+            logging.warning("conversation_history is not a list in mock data generation, converting from %s", type(conversation_history))
+            if isinstance(conversation_history, dict):
+                # If it's a dict, try to extract messages or create empty list
+                if 'messages' in conversation_history:
+                    conversation_history = conversation_history['messages']
+                else:
+                    conversation_history = []
+            else:
+                conversation_history = []
+                
         for msg in mock_messages:
             conversation_history.append({
                 "sender": msg["sender"],
@@ -1007,4 +1098,3 @@ def api_generate_mock_data():
     except Exception as e:
         logging.error(f"Error generating mock data: {e}")
         return {"success": False, "error": str(e)}
-

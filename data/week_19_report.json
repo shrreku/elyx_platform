@@ -1,8 +1,9 @@
 {
   "week": 19,
   "events": [],
-  "conversations_count": 20,
-  "adherence_rate": 0.5,
+  "conversations_count": 2,
+  "adherence_rate": 0.8,
+  "agent_response": "Ruby: Thank you for your commitment! I’m glad the suggestions are helpful. Please let me know if you’d like any additional resources, such as templates or reminders, to support your implementation. I’ll touch base next week to hear about your progress and address any adjustments you might need. If anything comes up sooner, feel free to reach out—I'm here to keep things running smoothly. Have a productive week and I look forward to hearing your updates!",
   "health_metrics": {
     "blood_sugar_avg": 144,
     "a1c": 5.82,
@@ -10,7 +11,9 @@
   },
   "agent_actions": {
     "doctor_hours": 11,
-    "coach_hours": 13
+    "coach_hours": 12
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thank you for your commitment! I’m glad the suggestions are helpful. Please let me know if you’d like any additional resources, such as templates or reminders, to support your implementation. I’ll tou..."
+  ]
 }

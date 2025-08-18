@@ -1,8 +1,9 @@
 {
   "week": 27,
   "events": [],
-  "conversations_count": 20,
+  "conversations_count": 2,
   "adherence_rate": 0.3,
+  "agent_response": "Ruby: Absolutely! I’ve just locked in your appointment for **[Day], [Date] at [Time]** and added it to your Elyx calendar. A reminder will pop up 24 hours before, and you’ll receive a brief confirmation email with the location details and any virtual meeting link. If anything changes or you need to reschedule, just let me know—I'm here to keep everything running smoothly. Looking forward to it!",
   "health_metrics": {
     "blood_sugar_avg": 128,
     "a1c": 5.66,
@@ -10,7 +11,9 @@
   },
   "agent_actions": {
     "doctor_hours": 8,
-    "coach_hours": 17
+    "coach_hours": 16
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Absolutely! I’ve just locked in your appointment for **[Day], [Date] at [Time]** and added it to your Elyx calendar. A reminder will pop up 24 hours before, and you’ll receive a brief confirmation ema..."
+  ]
 }

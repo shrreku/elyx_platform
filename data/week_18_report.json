@@ -3,16 +3,19 @@
   "events": [
     "exercise_plan_update"
   ],
-  "conversations_count": 20,
-  "adherence_rate": 0.8,
+  "conversations_count": 2,
+  "adherence_rate": 0.5,
+  "agent_response": "Ruby: Hi there! That’s great to hear you’re coordinating with your cook. If you’d like, I can schedule a quick check‑in next week to see how the updated exercise plan is fitting with your meals and to tweak anything that’s not working. Let me know a convenient time, or if you’d prefer I’ll set a reminder for you. Also, I can pull up your nutrition log to make sure the macros align with your workout goals—just say the word. Looking forward to hearing how it goes!",
   "health_metrics": {
     "blood_sugar_avg": 146,
     "a1c": 5.84,
     "weight": 73.2
   },
   "agent_actions": {
-    "doctor_hours": 14,
-    "coach_hours": 20
+    "doctor_hours": 8,
+    "coach_hours": 18
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! That’s great to hear you’re coordinating with your cook. If you’d like, I can schedule a quick check‑in next week to see how the updated exercise plan is fitting with your meals and to tweak..."
+  ]
 }

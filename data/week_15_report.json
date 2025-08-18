@@ -1,16 +1,19 @@
 {
   "week": 15,
   "events": [],
-  "conversations_count": 20,
+  "conversations_count": 2,
   "adherence_rate": 0.5,
+  "agent_response": "Ruby: That’s wonderful to hear! 🌟 I’ll set a gentle reminder for you a day before you start tweaking your schedule to keep everything on track. Let me know if you’d like a quick packing checklist, a weather preview for your destination, or a confirmation of your transport and accommodation details. I’m here to make your trip as smooth as possible—just say the word, and I’ll take care of it. Safe travels and enjoy the anticipation!",
   "health_metrics": {
     "blood_sugar_avg": 152,
     "a1c": 5.9,
     "weight": 73.5
   },
   "agent_actions": {
-    "doctor_hours": 12,
+    "doctor_hours": 9,
     "coach_hours": 10
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: That’s wonderful to hear! 🌟 I’ll set a gentle reminder for you a day before you start tweaking your schedule to keep everything on track. Let me know if you’d like a quick packing checklist, a weather..."
+  ]
 }

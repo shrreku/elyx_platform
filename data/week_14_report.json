@@ -3,16 +3,19 @@
   "events": [
     "exercise_plan_update"
   ],
-  "conversations_count": 20,
-  "adherence_rate": 0.7,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Hi there! I’m glad the travel tips were helpful. Since we’re about to roll out your updated exercise plan for week 14, it’ll be a great idea to tweak your routine a few days before you leave. Here’s a quick snapshot:  \n\n- **Pre‑travel**: Focus on low‑impact cardio (e.g., brisk walking or cycling) to keep your legs fresh.  \n- **During travel**: Incorporate short body‑weight circuits (squats, push‑ups, planks) in the hotel room—just 5–10 min, 2–3 times a day.  \n- **Post‑arrival**: Schedule a longer session (30–45 min) back home to re‑establish your momentum.  \n\nLet me know if you’d like to adjust any specific workouts or need gear recommendations. Safe travels and enjoy your time away!",
   "health_metrics": {
     "blood_sugar_avg": 154,
     "a1c": 5.92,
     "weight": 73.6
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 14
+    "doctor_hours": 15,
+    "coach_hours": 17
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! I’m glad the travel tips were helpful. Since we’re about to roll out your updated exercise plan for week 14, it’ll be a great idea to tweak your routine a few days before you leave. Here’s a..."
+  ]
 }

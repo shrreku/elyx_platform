@@ -3,16 +3,19 @@
   "events": [
     "business_travel"
   ],
-  "conversations_count": 15,
-  "adherence_rate": 0.7,
+  "conversations_count": 2,
+  "adherence_rate": 0.8,
+  "agent_response": "Ruby: Thank you for letting me know! I’ve noted that you’ll coordinate with your cook. While you’re on business travel, I’ll proactively manage your meal prep schedule, ensuring flavors and dietary preferences align with your itinerary. If anything changes—such as a new meeting time or a last‑minute menu tweak—just ping me, and I’ll adjust right away. I’ll keep you updated on any confirmations or adjustments so you can focus on your travel. Safe travels, and I’m here whenever you need anything else!",
   "health_metrics": {
     "blood_sugar_avg": 142,
     "a1c": 5.8,
     "weight": 73.0
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 11
+    "doctor_hours": 9,
+    "coach_hours": 17
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thank you for letting me know! I’ve noted that you’ll coordinate with your cook. While you’re on business travel, I’ll proactively manage your meal prep schedule, ensuring flavors and dietary preferen..."
+  ]
 }

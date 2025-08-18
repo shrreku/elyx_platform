@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Message = {
 	sender: string;
@@ -103,6 +103,35 @@ export default function ElyxDashboard() {
 		member_id: 'rohan'
 	});
 
+	const [simulationResults, setSimulationResults] = useState<any>(null);
+	const [xmlInput, setXmlInput] = useState("");
+
+	const runChatSimulation = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!xmlInput.trim()) {
+			alert("Please paste the XML content before running the simulation.");
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const response = await fetch(`${backendBase}/simulation/run`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ xml_content: xmlInput }),
+			});
+
+			if (response.ok) {
+				const results = await response.json();
+				setSimulationResults(results);
+			}
+		} catch (error) {
+			console.error("Error running chat simulation:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const backendBase = "http://localhost:8787";
 
@@ -129,7 +158,9 @@ export default function ElyxDashboard() {
 
 			if (messagesRes.ok) {
 				const data = await messagesRes.json();
-				setMessages(data as Message[]);
+				// Extract messages array from the response object
+				const messagesArray = data.messages || data || [];
+				setMessages(messagesArray as Message[]);
 			}
 			if (suggestionsRes.ok) {
 				const data = await suggestionsRes.json();
@@ -153,6 +184,8 @@ export default function ElyxDashboard() {
 			}
 		} catch (error) {
 			console.error('Error loading data:', error);
+			// Ensure messages is always an array even on error
+			setMessages([]);
 		}
 	};
 
@@ -182,7 +215,9 @@ export default function ElyxDashboard() {
 
 			if (response.ok) {
 				const newMessages = await response.json();
-				setMessages(newMessages as Message[]);
+				// Extract messages array from the response object
+				const messagesArray = newMessages.messages || newMessages || [];
+				setMessages(messagesArray as Message[]);
 				// Refresh suggestions and issues after chat
 				setTimeout(refreshAll, 500);
 			}
@@ -317,13 +352,37 @@ export default function ElyxDashboard() {
 
 		// Stats
 	const stats = {
-		totalMessages: messages.length,
-		pendingSuggestions: pendingSuggestions.length,
-		activeTasks: planItems.in_progress.length,
-		completedTasks: planItems.completed.length,
-		openIssues: issues.filter(i => i.status !== 'resolved').length,
-		activeExperiments: experiments.filter(e => e.status === 'running').length,
+		totalMessages: Array.isArray(messages) ? messages.length : 0,
+		pendingSuggestions: Array.isArray(pendingSuggestions) ? pendingSuggestions.length : 0,
+		activeTasks: Array.isArray(planItems.in_progress) ? planItems.in_progress.length : 0,
+		completedTasks: Array.isArray(planItems.completed) ? planItems.completed.length : 0,
+		openIssues: Array.isArray(issues) ? issues.filter(i => i.status !== 'resolved').length : 0,
+		activeExperiments: Array.isArray(experiments) ? experiments.filter(e => e.status === 'running').length : 0,
     };
+
+	const exportToCsv = (data: any[], filename: string) => {
+		const headers = ['content', 'date', 'time', 'sender'];
+		const csvRows = [headers.join(',')];
+
+		for (const row of data) {
+			const values = headers.map(header => {
+				const value = header === 'content' ? row['message'] : row[header];
+				const escaped = ('' + value).replace(/"/g, '\\"');
+				return `"${escaped}"`;
+			});
+			csvRows.push(values.join(','));
+		}
+
+		const blob = new Blob([csvRows.join('\\n')], { type: 'text/csv' });
+		const url = window.URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.setAttribute('hidden', '');
+		a.setAttribute('href', url);
+		a.setAttribute('download', filename);
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	};
 
 	return (
 		<div className="app-container">
@@ -357,7 +416,7 @@ export default function ElyxDashboard() {
 						className={`nav-tab ${activeTab === "data" ? "active" : ""}`}
 						onClick={() => setActiveTab("data")}
 					>
-						🗄️ Data Management
+						 simulating Chat
 					</button>
 					<button
 						className={`nav-tab ${activeTab === "analytics" ? "active" : ""}`}
@@ -379,7 +438,23 @@ export default function ElyxDashboard() {
 								</div>
 								<div className="chat-container">
 									<div className="chat-messages">
-										{messages.map((msg, idx) => (
+										{!Array.isArray(messages) && (
+											<div className="message agent">
+												<div className="message-header">System</div>
+												<div className="message-content">
+													<div className="loading"></div> Loading messages...
+												</div>
+											</div>
+										)}
+										{Array.isArray(messages) && messages.length === 0 && (
+											<div className="message agent">
+												<div className="message-header">AI Team</div>
+												<div className="message-content">
+													No messages yet. Start a conversation!
+												</div>
+											</div>
+										)}
+										{Array.isArray(messages) && messages.map((msg, idx) => (
 											<div key={idx} className={`message ${msg.sender === 'Rohan' ? 'user' : 'agent'}`}>
 												<div className="message-header">
 													{msg.sender} {msg.timestamp && `• ${new Date(msg.timestamp).toLocaleTimeString()}`}
@@ -450,14 +525,14 @@ export default function ElyxDashboard() {
 									<p className="card-subtitle">Review and accept/reject AI recommendations</p>
 								</div>
 								<div className="space-y-3 max-h-96 overflow-y-auto">
-									{pendingSuggestions.map((suggestion) => (
+									{Array.isArray(pendingSuggestions) && pendingSuggestions.map((suggestion) => (
 										<div key={suggestion.id} className="p-4 border border-gray-200 rounded-lg">
 											<div className="flex items-start justify-between mb-2">
 												<h4 className="text-sm font-medium">{suggestion.title}</h4>
 												<span className="text-xs text-gray-500">{suggestion.agent}</span>
 											</div>
 											<p className="text-xs text-gray-600 mb-3">{suggestion.details}</p>
-											<div className="flex items-center justify-between">
+											<div className="flex items-start justify-between">
 												<span className="text-xs text-gray-500">{suggestion.category}</span>
 							<div className="flex gap-2">
 													<button
@@ -476,7 +551,7 @@ export default function ElyxDashboard() {
 											</div>
 										</div>
 									))}
-									{pendingSuggestions.length === 0 && (
+									{(!Array.isArray(pendingSuggestions) || pendingSuggestions.length === 0) && (
 										<p className="text-sm text-gray-500 text-center py-8">No new suggestions. Start chatting to get personalized recommendations!</p>
 									)}
 								</div>
@@ -495,7 +570,7 @@ export default function ElyxDashboard() {
 								<div className="stat-label">New Suggestions</div>
 							</div>
 							<div className="stat-card">
-								<div className="stat-value text-blue-500">{planItems.todo.length}</div>
+								<div className="stat-value text-blue-500">{Array.isArray(planItems.todo) ? planItems.todo.length : 0}</div>
 								<div className="stat-label">To-Do Tasks</div>
 							</div>
 							<div className="stat-card">
@@ -520,15 +595,15 @@ export default function ElyxDashboard() {
 												className={`btn btn-sm ${planFilter === status ? 'btn-primary' : ''}`}
 												onClick={() => setPlanFilter(status)}
 											>
-												{status === 'todo' ? `To-Do (${planItems.todo.length})` : 
-												 status === 'in_progress' ? `In Progress (${planItems.in_progress.length})` :
-												 `Completed (${planItems.completed.length})`}
+												{status === 'todo' ? `To-Do (${Array.isArray(planItems.todo) ? planItems.todo.length : 0})` : 
+												 status === 'in_progress' ? `In Progress (${Array.isArray(planItems.in_progress) ? planItems.in_progress.length : 0})` :
+												 `Completed (${Array.isArray(planItems.completed) ? planItems.completed.length : 0})`}
 											</button>
 										))}
 									</div>
 								</div>
 								<div className="space-y-3 max-h-96 overflow-y-auto">
-									{planItems[planFilter].map((item) => (
+									{Array.isArray(planItems[planFilter]) && planItems[planFilter].map((item) => (
 										<div key={item.id} className="p-4 border border-gray-200 rounded-lg">
 											<div className="flex items-start justify-between mb-2">
 												<h4 className="font-medium">{item.title}</h4>
@@ -561,7 +636,7 @@ export default function ElyxDashboard() {
 											</div>
 										</div>
 									))}
-									{planItems[planFilter].length === 0 && (
+									{(!Array.isArray(planItems[planFilter]) || planItems[planFilter].length === 0) && (
 										<div className="text-center py-8">
 											<p className="text-sm text-gray-500 mb-2">
 												{planFilter === 'todo' ? 'No tasks to do' :
@@ -582,7 +657,7 @@ export default function ElyxDashboard() {
 									<h3 className="card-title">Issues & Concerns</h3>
 								</div>
 								<div className="space-y-3 max-h-96 overflow-y-auto">
-									{issues.filter(i => (i.status || 'open') !== 'resolved').map((issue) => (
+									{Array.isArray(issues) && issues.filter(i => (i.status || 'open') !== 'resolved').map((issue) => (
 										<div key={issue.id} className="p-4 border border-gray-200 rounded-lg">
 											<div className="flex items-start justify-between mb-2">
 												<h4 className="font-medium">{issue.title}</h4>
@@ -602,7 +677,7 @@ export default function ElyxDashboard() {
 											<div className="text-xs text-gray-500">{issue.category}</div>
 										</div>
 									))}
-									{issues.length === 0 && (
+									{(!Array.isArray(issues) || issues.length === 0) && (
 										<p className="text-sm text-gray-500 text-center py-8">No issues reported.</p>
 									)}
 								</div>
@@ -614,7 +689,7 @@ export default function ElyxDashboard() {
 									<h3 className="card-title">Episodes</h3>
 								</div>
 								<div className="space-y-3 max-h-96 overflow-y-auto">
-									{episodes.map((episode) => (
+									{Array.isArray(episodes) && episodes.map((episode) => (
 										<div key={episode.id} className="p-4 border border-gray-200 rounded-lg">
 											<div className="flex items-start justify-between mb-2">
 												<h4 className="font-medium">{episode.title}</h4>
@@ -643,7 +718,7 @@ export default function ElyxDashboard() {
 									<h3 className="card-title">Experiments</h3>
 								</div>
 								<div className="space-y-3 max-h-96 overflow-y-auto">
-									{experiments.map((experiment) => (
+									{Array.isArray(experiments) && experiments.map((experiment) => (
 										<div key={experiment.id} className="p-4 border border-gray-200 rounded-lg">
 											<div className="flex items-start justify-between mb-2">
 												<h4 className="font-medium text-sm">{experiment.hypothesis}</h4>
@@ -659,7 +734,7 @@ export default function ElyxDashboard() {
 											)}
 										</div>
 									))}
-									{experiments.length === 0 && (
+									{(!Array.isArray(experiments) || experiments.length === 0) && (
 										<p className="text-sm text-gray-500 text-center py-8">No experiments running.</p>
 									)}
 								</div>
@@ -668,195 +743,78 @@ export default function ElyxDashboard() {
 						</div>
 				)}
 
-				{/* Data Management Tab */}
+				{/* Chat Simulation Tab */}
 				{activeTab === "data" && (
 					<div>
-						<div className="flex items-center justify-between mb-6">
-							<h2 className="text-2xl font-bold">Data Management</h2>
-							<div className="flex gap-2">
-								<button onClick={generateMockData} className="btn btn-secondary">
-									🎲 Generate Mock Data
-								</button>
-								<button
-									onClick={async () => {
-										await fetch(`${backendBase}/reset-soft`, { method: 'POST' });
-										await refreshAll();
-									}}
-									className="btn"
-								>
-									🧹 Reset (keep user)
-								</button>
+						<h2 className="text-2xl font-bold mb-6">Chat Simulation</h2>
+						<div className="card">
+							<div className="card-header">
+								<h3 className="card-title">Journey Description</h3>
+								<p className="card-subtitle">
+									Enter the month-wise journey description for Rohan Patel.
+									Include episodes, major messages, and test/report data.
+								</p>
 							</div>
+							<form onSubmit={runChatSimulation}>
+								<div className="form-group">
+									<textarea
+										className="form-input form-textarea h-64"
+										value={xmlInput}
+										onChange={(e) => setXmlInput(e.target.value)}
+										placeholder="Paste the content of episodes.xml here..."
+									/>
+								</div>
+								<button type="submit" className="btn btn-primary" disabled={isLoading}>
+									{isLoading ? <div className="loading"></div> : "Run Simulation"}
+								</button>
+							</form>
+
+							{simulationResults && (
+								<div className="mt-6">
+									<h3 className="text-xl font-bold mb-4">Simulation Results</h3>
+
+									{/* Journey Summary */}
+									<div className="mb-6">
+										<h4 className="text-lg font-semibold mb-2">Journey Summary</h4>
+										<div className="card bg-gray-50">
+											<div className="card-body">
+												<h5 className="card-title text-primary">Key Milestones</h5>
+												<ul className="list-disc pl-5 space-y-2 mb-4">
+													{Array.isArray(simulationResults.journey_summary?.key_milestones) && simulationResults.journey_summary.key_milestones.map((milestone: string, idx: number) => (
+														<li key={idx} className="text-gray-700">{milestone}</li>
+													))}
+												</ul>
+												<h5 className="card-title text-primary">Overall Progress</h5>
+												<p className="text-gray-700">{simulationResults.journey_summary.overall_progress}</p>
+											</div>
+										</div>
+									</div>
+
+									{/* Conversation History */}
+									<div className="mb-6">
+										<h4 className="text-lg font-semibold mb-2">Conversation History</h4>
+										<div className="chat-container">
+											<div className="chat-messages">
+												{Array.isArray(simulationResults.conversation_history) && simulationResults.conversation_history.map((msg: Message, idx: number) => (
+													<div key={idx} className={`message ${msg.sender === 'Rohan' ? 'user' : 'agent'}`}>
+														<div className="message-header">
+															{msg.sender}
+														</div>
+														<div className="message-content">
+															{msg.message}
+														</div>
+													</div>
+												))}
+											</div>
+										</div>
+										<button onClick={() => exportToCsv(simulationResults.conversation_history, 'conversation_history.csv')} className="btn btn-secondary mt-2">
+											Download Conversation CSV
+										</button>
+									</div>
+								</div>
+							)}
 						</div>
-
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-							{/* Add Episode */}
-							<div className="card">
-								<div className="card-header">
-									<h3 className="card-title">Add New Episode</h3>
-									<button
-										onClick={() => setShowEpisodeForm(!showEpisodeForm)}
-										className="btn btn-primary btn-sm"
-									>
-										{showEpisodeForm ? 'Cancel' : '+ Add Episode'}
-									</button>
-								</div>
-								{showEpisodeForm && (
-									<form onSubmit={addEpisode} className="space-y-4">
-										<div className="form-group">
-											<label className="form-label">Title</label>
-											<input
-												type="text"
-												className="form-input"
-												value={episodeForm.title}
-												onChange={(e) => setEpisodeForm({...episodeForm, title: e.target.value})}
-												required
-											/>
-										</div>
-										<div className="form-group">
-											<label className="form-label">Trigger Type</label>
-											<select
-												className="form-input form-select"
-												value={episodeForm.trigger_type}
-												onChange={(e) => setEpisodeForm({...episodeForm, trigger_type: e.target.value})}
-											>
-												<option value="user_message">User Message</option>
-												<option value="health_alert">Health Alert</option>
-												<option value="scheduled_check">Scheduled Check</option>
-												<option value="external_data">External Data</option>
-											</select>
-										</div>
-										<div className="form-group">
-											<label className="form-label">Description</label>
-											<textarea
-												className="form-input form-textarea"
-												value={episodeForm.trigger_description}
-												onChange={(e) => setEpisodeForm({...episodeForm, trigger_description: e.target.value})}
-												required
-											/>
-										</div>
-										<div className="form-group">
-											<label className="form-label">Priority (1-5)</label>
-											<select
-												className="form-input form-select"
-												value={episodeForm.priority}
-												onChange={(e) => setEpisodeForm({...episodeForm, priority: parseInt(e.target.value)})}
-											>
-												<option value={1}>1 - Low</option>
-												<option value={2}>2 - Normal</option>
-												<option value={3}>3 - Medium</option>
-												<option value={4}>4 - High</option>
-												<option value={5}>5 - Critical</option>
-											</select>
-										</div>
-										<div className="form-group">
-											<label className="form-label">Member State Before</label>
-											<textarea
-												className="form-input form-textarea"
-												value={episodeForm.member_state_before}
-												onChange={(e) => setEpisodeForm({...episodeForm, member_state_before: e.target.value})}
-												placeholder="Describe the member's state before this episode..."
-											/>
-										</div>
-										<button type="submit" className="btn btn-primary">
-											Create Episode
-										</button>
-									</form>
-								)}
-							</div>
-
-							{/* Add Experiment */}
-							<div className="card">
-								<div className="card-header">
-									<h3 className="card-title">Add New Experiment</h3>
-									<button
-										onClick={() => setShowExperimentForm(!showExperimentForm)}
-										className="btn btn-primary btn-sm"
-									>
-										{showExperimentForm ? 'Cancel' : '+ Add Experiment'}
-						</button>
 					</div>
-								{showExperimentForm && (
-									<form onSubmit={addExperiment} className="space-y-4">
-										<div className="form-group">
-											<label className="form-label">Hypothesis</label>
-											<textarea
-												className="form-input form-textarea"
-												value={experimentForm.hypothesis}
-												onChange={(e) => setExperimentForm({...experimentForm, hypothesis: e.target.value})}
-												placeholder="What do you want to test?"
-												required
-											/>
-										</div>
-										<div className="form-group">
-											<label className="form-label">Template</label>
-											<select
-												className="form-input form-select"
-												value={experimentForm.template}
-												onChange={(e) => setExperimentForm({...experimentForm, template: e.target.value})}
-											>
-												<option value="">Custom Experiment</option>
-												<option value="SLEEP_OPTIMIZATION">Sleep Optimization</option>
-												<option value="NUTRITION_INTERVENTION">Nutrition Intervention</option>
-												<option value="SUPPLEMENT_TRIAL">Supplement Trial</option>
-												<option value="EXERCISE_PROTOCOL">Exercise Protocol</option>
-												<option value="CGM_MEAL_TEST">CGM Meal Test</option>
-											</select>
-										</div>
-										<div className="form-group">
-											<label className="form-label">Member ID</label>
-											<input
-												type="text"
-												className="form-input"
-												value={experimentForm.member_id}
-												onChange={(e) => setExperimentForm({...experimentForm, member_id: e.target.value})}
-												required
-											/>
-										</div>
-										<button type="submit" className="btn btn-primary">
-											Create Experiment
-										</button>
-									</form>
-								)}
-				</div>
-
-							{/* Data Overview */}
-							<div className="card lg:col-span-2">
-								<div className="card-header">
-									<h3 className="card-title">Data Overview</h3>
-									<button onClick={refreshAll} className="btn btn-sm">
-										🔄 Refresh
-						</button>
-					</div>
-								<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-									<div className="text-center p-4 bg-blue-50 rounded-lg">
-										<div className="text-2xl font-bold text-blue-600">{messages.length}</div>
-										<div className="text-sm text-gray-600">Messages</div>
-									</div>
-									<div className="text-center p-4 bg-green-50 rounded-lg">
-										<div className="text-2xl font-bold text-green-600">{suggestions.length}</div>
-										<div className="text-sm text-gray-600">Suggestions</div>
-									</div>
-									<div className="text-center p-4 bg-yellow-50 rounded-lg">
-										<div className="text-2xl font-bold text-yellow-600">{issues.length}</div>
-										<div className="text-sm text-gray-600">Issues</div>
-									</div>
-									<div className="text-center p-4 bg-purple-50 rounded-lg">
-										<div className="text-2xl font-bold text-purple-600">{episodes.length}</div>
-										<div className="text-sm text-gray-600">Episodes</div>
-									</div>
-									<div className="text-center p-4 bg-red-50 rounded-lg">
-										<div className="text-2xl font-bold text-red-600">{decisions.length}</div>
-										<div className="text-sm text-gray-600">Decisions</div>
-									</div>
-									<div className="text-center p-4 bg-indigo-50 rounded-lg">
-										<div className="text-2xl font-bold text-indigo-600">{experiments.length}</div>
-										<div className="text-sm text-gray-600">Experiments</div>
-									</div>
-								</div>
-				</div>
-				</div>
-				</div>
 				)}
 
 				{/* Analytics Tab */}

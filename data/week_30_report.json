@@ -3,16 +3,19 @@
   "events": [
     "exercise_plan_update"
   ],
-  "conversations_count": 20,
-  "adherence_rate": 0.3,
+  "conversations_count": 2,
+  "adherence_rate": 0.5,
+  "agent_response": "Ruby: Thank you for letting me know! I’ve logged the exercise plan update and will keep track of how it goes. If you’d like me to tweak your meal plan or add new recipes that pair well with your new routine, just drop me a note. I can also schedule a quick check‑in next week to review progress and address any questions. Let me know how I can support you further—I'm here to make everything run smoothly.",
   "health_metrics": {
     "blood_sugar_avg": 122,
     "a1c": 5.6000000000000005,
     "weight": 72.0
   },
   "agent_actions": {
-    "doctor_hours": 10,
-    "coach_hours": 20
+    "doctor_hours": 8,
+    "coach_hours": 11
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thank you for letting me know! I’ve logged the exercise plan update and will keep track of how it goes. If you’d like me to tweak your meal plan or add new recipes that pair well with your new routine..."
+  ]
 }

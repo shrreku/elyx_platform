@@ -576,3 +576,33 @@ button {
 .justify-between { justify-content: space-between; }
 .gap-2 { gap: 0.5rem; }
 .gap-4 { gap: 1rem; }
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+    border-left: 2px solid var(--border);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -0.5rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: var(--primary);
+}
+
+.timeline-content {
+    padding-left: 1rem;
+}
+
+.timeline-date {
+    font-weight: 600;
+    color: var(--primary);
+}

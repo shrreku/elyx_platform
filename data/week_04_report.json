@@ -3,16 +3,19 @@
   "events": [
     "business_travel"
   ],
-  "conversations_count": 20,
-  "adherence_rate": 0.8,
+  "conversations_count": 2,
+  "adherence_rate": 0.7,
+  "agent_response": "Ruby: That’s great to hear! Here’s a quick checklist to keep everything smooth:  \n\n1. **Travel Documents** – Confirm passport, visa, and any required health certificates are up‑to‑date.  \n2. **Itinerary & Schedule** – Upload your flight, hotel, and meeting details to your calendar (I’ll sync it for you).  \n3. **Packing** – Pack essentials (power adapters, work attire, travel‑size toiletries) and leave a small “just in case” bag.  \n4. **Local Logistics** – I’ve arranged a pre‑arrival airport transfer and a local SIM for instant connectivity.  \n5. **Health & Safety** – Book any needed insurance and check local travel advisories.  \n6. **Reminder** – I’ll send a reminder 48 hrs before departure with all key details.  \n\nLet me know if you’d like any additional support—happy travels!",
   "health_metrics": {
     "blood_sugar_avg": 174,
     "a1c": 6.12,
     "weight": 75
   },
   "agent_actions": {
-    "doctor_hours": 14,
-    "coach_hours": 19
+    "doctor_hours": 8,
+    "coach_hours": 14
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: That’s great to hear! Here’s a quick checklist to keep everything smooth:  \n\n1. **Travel Documents** – Confirm passport, visa, and any required health certificates are up‑to‑date.  \n2. **Itinerary & S..."
+  ]
 }

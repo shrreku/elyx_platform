@@ -3,16 +3,19 @@
   "events": [
     "business_travel"
   ],
-  "conversations_count": 20,
+  "conversations_count": 2,
   "adherence_rate": 0.3,
+  "agent_response": "Ruby: Hi there! I’m glad the tips were helpful. Here’s a quick play‑by‑play to keep your week running smoothly:\n\n1. **Adjust your calendar** – Block the travel days, add a buffer for early travel and late arrival, and set a reminder 48 hrs before departure.  \n2. **Notify key stakeholders** – Send a brief update to your team and any meetings you’ll miss; I’ll help draft that if needed.  \n3. **Pack smart** – I’ve attached a concise packing list (laptop, charger, business attire, travel documents, and any local essentials).  \n4. **Confirm logistics** – Double‑check flight status, airport transfer, and hotel reservation. I’ll ping you 24 hrs before to confirm.  \n5. **Health & security** – Upload your travel insurance, check any required health passes, and set up a local emergency contact.  \n\nLet me know if you’d like a personalized itinerary or any additional support. Safe travels!",
   "health_metrics": {
     "blood_sugar_avg": 150,
     "a1c": 5.88,
     "weight": 73.4
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 16
+    "doctor_hours": 9,
+    "coach_hours": 11
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! I’m glad the tips were helpful. Here’s a quick play‑by‑play to keep your week running smoothly:\n\n1. **Adjust your calendar** – Block the travel days, add a buffer for early travel and late a..."
+  ]
 }

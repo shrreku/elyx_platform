@@ -1,16 +1,19 @@
 {
   "week": 9,
   "events": [],
-  "conversations_count": 20,
-  "adherence_rate": 0.8,
+  "conversations_count": 2,
+  "adherence_rate": 0.5,
+  "agent_response": "Ruby: That sounds perfect! I’ll make a note of the details and keep track of the timeline. If anything comes up or you need a reminder, just let me know. In the meantime, feel free to ping me if you’d like to tweak the menu or add any last‑minute requests. I’ll be here to make sure everything runs smoothly. Looking forward to hearing how it goes!",
   "health_metrics": {
     "blood_sugar_avg": 164,
     "a1c": 6.0200000000000005,
     "weight": 74.1
   },
   "agent_actions": {
-    "doctor_hours": 15,
-    "coach_hours": 10
+    "doctor_hours": 11,
+    "coach_hours": 17
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: That sounds perfect! I’ll make a note of the details and keep track of the timeline. If anything comes up or you need a reminder, just let me know. In the meantime, feel free to ping me if you’d like ..."
+  ]
 }

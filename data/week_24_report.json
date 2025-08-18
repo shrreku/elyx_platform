@@ -3,16 +3,19 @@
   "events": [
     "quarterly_diagnostic_test"
   ],
-  "conversations_count": 15,
-  "adherence_rate": 0.3,
+  "conversations_count": 2,
+  "adherence_rate": 0.8,
+  "agent_response": "Ruby: Hi there! I’m glad you found the travel tips useful. Adjusting your schedule a few days before departure is a smart move—just let me know if you need help setting reminders or syncing your calendar.  \n\nAlso, a quick heads‑up: your quarterly diagnostic test is coming up in Week 24. If you’d like to lock in a time or need assistance prepping for the test, I’m here to help. Feel free to tell me what works best for you, and I’ll make sure everything’s set so you can focus on a smooth trip. Safe travels!",
   "health_metrics": {
     "blood_sugar_avg": 134,
     "a1c": 5.720000000000001,
     "weight": 72.6
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 11
+    "doctor_hours": 14,
+    "coach_hours": 19
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Hi there! I’m glad you found the travel tips useful. Adjusting your schedule a few days before departure is a smart move—just let me know if you need help setting reminders or syncing your calendar.  ..."
+  ]
 }

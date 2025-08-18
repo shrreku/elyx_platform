@@ -3,16 +3,19 @@
   "events": [
     "quarterly_diagnostic_test"
   ],
-  "conversations_count": 20,
-  "adherence_rate": 0.7,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Great! I’ve scheduled your quarterly diagnostic test for **[Date] at [Time]** in the [Location] room. I’ve added it to your calendar and set a reminder 24 hours before the appointment.  \n\n**What to bring:** a copy of your most recent medical records, a list of current medications, and any recent lab reports.  \n\nIf you need to reschedule or have questions before the test, just reply to this message or call (555)‑123‑4567. I’ll be here to help you every step of the way. Looking forward to seeing you soon!",
   "health_metrics": {
     "blood_sugar_avg": 120,
     "a1c": 5.5200000000000005,
     "weight": 71.6
   },
   "agent_actions": {
-    "doctor_hours": 13,
-    "coach_hours": 13
+    "doctor_hours": 14,
+    "coach_hours": 18
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Great! I’ve scheduled your quarterly diagnostic test for **[Date] at [Time]** in the [Location] room. I’ve added it to your calendar and set a reminder 24 hours before the appointment.  \n\n**What to br..."
+  ]
 }

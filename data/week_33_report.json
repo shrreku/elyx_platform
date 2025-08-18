@@ -1,16 +1,19 @@
 {
   "week": 33,
   "events": [],
-  "conversations_count": 20,
-  "adherence_rate": 0.8,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Thanks for the quick update! I’ll keep an eye on the plan and will touch base once you hear back from your cook. If you need any tweaks—ingredients, prep steps, or a prep‑list—just let me know and I’ll get it sorted right away. I can also set a gentle reminder for next week to make sure everything went smoothly. Looking forward to hearing how it goes!",
   "health_metrics": {
     "blood_sugar_avg": 120,
     "a1c": 5.54,
     "weight": 71.7
   },
   "agent_actions": {
-    "doctor_hours": 9,
-    "coach_hours": 10
+    "doctor_hours": 15,
+    "coach_hours": 17
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thanks for the quick update! I’ll keep an eye on the plan and will touch base once you hear back from your cook. If you need any tweaks—ingredients, prep steps, or a prep‑list—just let me know and I’l..."
+  ]
 }

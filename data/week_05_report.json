@@ -1,16 +1,19 @@
 {
   "week": 5,
   "events": [],
-  "conversations_count": 25,
-  "adherence_rate": 0.3,
+  "conversations_count": 2,
+  "adherence_rate": 0.5,
+  "agent_response": "Ruby: Thank you for letting me know! I’ve noted that you’ll share the details with your cook. Once you confirm the menu and timing, I’ll update your weekly plan and ensure everything is on track. If you’d like me to send a reminder to the cook or double‑check any dietary preferences, just let me know. I’ll keep an eye on the status and will follow up to confirm everything went smoothly. Feel free to reach out anytime if you need further assistance—I'm here to make sure everything runs seamlessly.",
   "health_metrics": {
     "blood_sugar_avg": 172,
     "a1c": 6.1000000000000005,
     "weight": 74.5
   },
   "agent_actions": {
-    "doctor_hours": 15,
-    "coach_hours": 16
+    "doctor_hours": 12,
+    "coach_hours": 11
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Thank you for letting me know! I’ve noted that you’ll share the details with your cook. Once you confirm the menu and timing, I’ll update your weekly plan and ensure everything is on track. If you’d l..."
+  ]
 }

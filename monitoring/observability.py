@@ -1,4 +1,8 @@
 import os
+import warnings
+
+# Suppress TracerProvider warnings
+warnings.filterwarnings("ignore", message="Overriding of current TracerProvider is not allowed")
 
 try:
     from langfuse.decorators import observe
@@ -15,11 +19,16 @@ except Exception:  # noqa: BLE001
         def __init__(self, *args, **kwargs):
             pass
 
-
-langfuse = Langfuse(
-    secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
-    public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
-)
+# Initialize Langfuse with proper error handling
+try:
+    langfuse = Langfuse(
+        secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
+        public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
+    )
+except Exception as e:
+    # Fallback to no-op if initialization fails
+    warnings.warn(f"Failed to initialize Langfuse: {e}")
+    langfuse = Langfuse()
 
 
 @observe()

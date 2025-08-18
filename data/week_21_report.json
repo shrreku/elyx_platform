@@ -1,16 +1,19 @@
 {
   "week": 21,
   "events": [],
-  "conversations_count": 20,
-  "adherence_rate": 0.7,
+  "conversations_count": 2,
+  "adherence_rate": 0.3,
+  "agent_response": "Ruby: Great! I’ve just added the meeting to your calendar for the confirmed time. You’ll receive a reminder 24 hours before. If there’s anything you’d like to prepare ahead—agenda items, documents, or a pre‑meeting discussion—just let me know. I’m here to make sure everything runs smoothly. Looking forward to our session!",
   "health_metrics": {
     "blood_sugar_avg": 140,
     "a1c": 5.78,
     "weight": 72.9
   },
   "agent_actions": {
-    "doctor_hours": 10,
-    "coach_hours": 13
+    "doctor_hours": 11,
+    "coach_hours": 10
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Great! I’ve just added the meeting to your calendar for the confirmed time. You’ll receive a reminder 24 hours before. If there’s anything you’d like to prepare ahead—agenda items, documents, or a pre..."
+  ]
 }

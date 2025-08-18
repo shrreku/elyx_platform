@@ -3,8 +3,9 @@
   "events": [
     "business_travel"
   ],
-  "conversations_count": 20,
-  "adherence_rate": 0.8,
+  "conversations_count": 2,
+  "adherence_rate": 0.5,
+  "agent_response": "Ruby: Great to hear you’re preparing! Let me know if you’d like me to lock in any flights, hotel room upgrades, or conference check‑ins. I can set up a countdown calendar, suggest a packing list tailored to your itinerary, and provide a local map with metro schedules so you can navigate smoothly. If you need a quick review of your agenda or want me to arrange a last‑minute meeting room, just let me know. I’ll keep everything in sync and send you a pre‑departure checklist by the end of the week. Safe travels!",
   "health_metrics": {
     "blood_sugar_avg": 126,
     "a1c": 5.640000000000001,
@@ -12,7 +13,9 @@
   },
   "agent_actions": {
     "doctor_hours": 11,
-    "coach_hours": 16
+    "coach_hours": 13
   },
-  "recommendations": []
+  "recommendations": [
+    "Ruby: Great to hear you’re preparing! Let me know if you’d like me to lock in any flights, hotel room upgrades, or conference check‑ins. I can set up a countdown calendar, suggest a packing list tailored to..."
+  ]
 }
