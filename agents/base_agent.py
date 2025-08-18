@@ -57,7 +57,17 @@ class BaseAgent:
             response = requests.post(url, headers=headers, json=data, timeout=60)
             if response.status_code == 200:
                 body = response.json()
-                return body["choices"][0]["message"]["content"]
+                # Handle different response formats
+                if "choices" in body and len(body["choices"]) > 0:
+                    return body["choices"][0]["message"]["content"]
+                elif "content" in body:
+                    return body["content"]
+                elif "response" in body:
+                    return body["response"]
+                else:
+                    # Log the unexpected response format for debugging
+                    print(f"Unexpected API response format: {json.dumps(body, indent=2)}")
+                    raise RuntimeError(f"Unexpected API response format - missing 'choices' field")
             # On 429 keep retrying; otherwise break
             if response.status_code != 429:
                 break
@@ -77,4 +87,3 @@ class BaseAgent:
         response = self.call_openrouter(messages)
         self.conversation_history.append({"user": user_message, "assistant": response})
         return response
-

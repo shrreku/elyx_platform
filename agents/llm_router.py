@@ -27,10 +27,9 @@ class LLMRouter:
     - Decide which agents should be involved (keeps existing `route` behavior for compatibility).
     - Build per-agent prompts that include the extracted key info and explicit instructions:
         * Agents should only reply within their domain of expertise.
-        * If an agent receives a request outside its domain it should reply with a standard handoff token so
+        * If an agent receives a request outside its domain it should reply with a standard token so
           the router can forward to the appropriate agent instead of returning out-of-domain content.
-    - Provide an `orchestrate` method that returns tailored messages for each selected agent as well as
-      handoff prompts the router can use to call downstream agents when needed.
+    - Provide an `orchestrate` method that returns tailored messages and execution strategies for each selected agent.
 
     Backwards compatibility:
     - `route(message, context, max_agents)` still returns a list of agent names (unchanged).
@@ -48,6 +47,16 @@ class LLMRouter:
             "Neel": NeelAgent().system_prompt,
         }
 
+        # Concrete agent instances for execution (used by execute_strategy)
+        self.agent_instances: Dict[str, BaseAgent] = {
+            "Ruby": RubyAgent(),
+            "Dr. Warren": DrWarrenAgent(),
+            "Advik": AdvikAgent(),
+            "Carla": CarlaAgent(),
+            "Rachel": RachelAgent(),
+            "Neel": NeelAgent(),
+        }
+
         # Router agent (used for extraction/routing decisions)
         self.router = BaseAgent(
             name="Router",
@@ -58,6 +67,13 @@ You are an expert router/orchestrator for a multi-agent healthcare team.
 Your job is twofold: (1) extract concise structured information from the user's message
 (summary, top intent, important entities/measurements), and (2) decide which agent(s)
 should handle the user's request.
+
+Guidelines & rules:
+- Prefer the single most relevant specialist for domain questions (medical/physio/nutrition/performance).
+- If the message clearly indicates physiotherapy / movement / pain (keywords: "pain", "injury", "back", "knees", "mobility", "rehab"), RECOMMEND the physiotherapist ("Rachel") as the primary agent and DO NOT recommend the nutritionist ("Carla") for that message.
+- If the message clearly indicates nutrition/metabolic questions (keywords: "cgm", "glucose", "meal", "diet", "food", "supplement"), RECOMMEND "Carla".
+- Avoid recommending agents outside the domain signaled by the text. If uncertain, return a conservative list (or Ruby for coordination).
+- Return structured JSON only.
 
 Return JSON only for extraction tasks, for example:
 {"summary": "...", "intent": "nutrition|medical|logistics|performance|physio|other", "entities": {"glucose": "150", "sleep_hours": "6"}, "keywords": ["cgm", "spike"], "confidence": 0.8}
@@ -106,7 +122,7 @@ Return JSON only for extraction tasks, for example:
         - health_issue: {title, details, category, severity} or empty dict
         - is_improvement: bool
         - improvement: {title, details, related_issue_title?} or empty dict
-        - recommended_agents: optional list (LLM suggestion of agents)
+        - recommended_agents: optional list (LLM suggestion of agents, maximum 2-3 agents)
         """
         cache_key = (message.strip(), json.dumps(context or {}, sort_keys=True))
         if cache_key in self._extract_cache:
@@ -352,51 +368,31 @@ Return JSON only for extraction tasks, for example:
         }
 
     def route(self, message: str, context: Optional[Dict] = None, max_agents: int = 2) -> List[str]:
-        """Legacy routing - returns agent names. Uses router LLM to pick relevant agents."""
-        cache_key = (message.strip(), json.dumps(context or {}, sort_keys=True))
-        if cache_key in self._cache:
-            logger.debug("route: cache hit")
-            return self._cache[cache_key][:max_agents]
+        """Deprecated compatibility wrapper.
 
-        msgs = self._build_route_prompt(message, context)
-        logger.debug("route: calling router LLM for message (len=%d)", len(message or ""))
-        raw = self.router.call_openrouter(msgs)
-        logger.debug("route: raw router response len=%d", len(raw) if isinstance(raw, str) else 0)
-        data = self._extract_json(raw)
-        agents = data.get("agents") if isinstance(data, dict) else None
-        result: List[str]
-        if isinstance(agents, list):
-            valid = [a for a in agents if a in self.agent_descriptions]
-            seen = set()
-            ordered: List[str] = []
-            for a in valid:
-                if a not in seen:
-                    seen.add(a)
-                    ordered.append(a)
-            result = ordered[:max_agents]
-        else:
-            # Conservative fallback: no agent selected
-            result = []
-
-        logger.debug("route: selected agents=%s", result)
-
-        # If the router selected no agents, route to Ruby by default
-        if not result:
-            logger.debug("route: no agents selected by LLM; falling back to Ruby")
-            result = ["Ruby"][:max_agents]
-
-        # Tiny LRU: cap cache size to 128 entries
-        if len(self._cache) > 128:
-            self._cache.pop(next(iter(self._cache)))
-        self._cache[cache_key] = result
-        return result
+        Agent selection is now performed by extract_key_info (recommended_agents) and by orchestrate.
+        This function simply returns canonical agent names based on extractor recommendations.
+        Falls back to 'Ruby' when no recommendation is present.
+        """
+        key_info = self.extract_key_info(message, context)
+        raw_recs = key_info.get("recommended_agents") or []
+        name_map = {k.lower(): k for k in self.agent_descriptions.keys()}
+        selected: List[str] = []
+        for r in raw_recs:
+            if isinstance(r, str):
+                canon = name_map.get(r.lower())
+                if canon and canon not in selected:
+                    selected.append(canon)
+        if not selected:
+            selected = ["Ruby"]
+        return selected[:max_agents]
 
     def build_agent_messages(self, agent_name: str, key_info: Dict[str, Any], original_message: str, context: Optional[Dict] = None, primary_agent: Optional[str] = None) -> List[Dict[str, str]]:
         """Construct messages to send to the specified agent.
 
         Adds:
         - The agent's system prompt (from agent_descriptions).
-        - A short instruction forcing the agent to stay in-domain and a standard handoff token if out-of-scope.
+        - A short instruction forcing the agent to stay in-domain and a standard token if out-of-scope.
         - The extracted key info and the original user message.
 
         Special behavior:
@@ -410,18 +406,20 @@ Return JSON only for extraction tasks, for example:
         # Default domain instruction for all agents
         domain_instruction = (
             "You must ONLY answer within your domain/responsibilities. "
-            "If the user's request is outside your domain, do NOT improvise. Reply with a HANDOFF token to indicate forwarding. "
-            "If you are handed a request to respond after an explicit handoff, provide domain-specific, actionable content only. "
+            "If the user's request is outside your domain, do NOT improvise or provide domain-specific advice. "
+            "Reply with the token 'OUT_OF_SCOPE' (single token) if you cannot answer and optionally add one short coordinating sentence. "
+            "When the orchestrator instructs you to respond post-routing, provide domain-specific, actionable content only. "
             "Keep replies concise (<200 words) unless asked for deeper detail."
         )
 
-        # If Ruby is present but not the primary specialist, instruct Ruby to handoff explicitly
-        ruby_handoff_instruction = ""
+        # Ruby acts as concierge/orchestrator. Ruby clarifies and coordinates but must not self-handoff.
         intent = (key_info.get("intent") or "").lower()
-        if agent_name == "Ruby" and primary_agent and primary_agent != "Ruby":
-            ruby_handoff_instruction = (
-                f"BEGIN YOUR REPLY with the token 'HANDOFF:{primary_agent}' followed by an optional 1-line note like "
-                f"'Forwarding to {primary_agent} for domain-specific response.' Do NOT provide domain-specific medical/physio/nutrition advice."
+        ruby_instruction = ""
+        if agent_name == "Ruby":
+            ruby_instruction = (
+                "You are the Concierge/Orchestrator. If clarification is required, ask a single concise clarifying question. "
+                "Do NOT provide domain-specific clinical advice. Coordinate specialists and defer domain responses to them; "
+                "do not perform self-handoffs. Follow the orchestrator's execution plan when instructed."
             )
 
         # If there's a primary agent and this is not the primary, instruct non-primary agents to wait for explicit handoff
@@ -446,8 +444,8 @@ Return JSON only for extraction tasks, for example:
             {"role": "system", "content": system_prompt},
             {"role": "system", "content": domain_instruction},
         ]
-        if ruby_handoff_instruction:
-            messages.append({"role": "system", "content": ruby_handoff_instruction})
+        if ruby_instruction:
+            messages.append({"role": "system", "content": ruby_instruction})
         if prim_note:
             messages.append({"role": "system", "content": prim_note})
 
@@ -463,7 +461,7 @@ Return JSON only for extraction tasks, for example:
             {
                 "agent": "Ruby",
                 "messages": [ ... ],            # messages to send to this agent now (system/user)
-                "handoff_message": [ ... ]     # optional: messages to send to this agent when a handoff occurs
+                "strategy": { ... }             # execution strategy for this agent
             },
             ...
         ]
@@ -471,14 +469,43 @@ Return JSON only for extraction tasks, for example:
         Typical usage:
         1. router.orchestrate(...) -> get messages for each agent
         2. call agent.respond using the constructed messages (or BaseAgent.call_openrouter)
-        3. if an agent returns HANDOFF:<AgentName>, forward the relevant handoff_message to that agent
+        3. if an agent returns HANDOFF:<AgentName>, forward the relevant message to that agent
         """
-        # Decide agents (keep legacy route selection)
-        selected = self.route(message, context, max_agents=max_agents)
+        # Decide agents: extractor recommendations are authoritative.
         key_info = self.extract_key_info(message, context)
 
+        # Normalize extractor recommended agent names to canonical registry names
+        raw_recs = key_info.get("recommended_agents") or []
+        name_map = {k.lower(): k for k in self.agent_descriptions.keys()}
+        recs: List[str] = []
+        for r in raw_recs:
+            if isinstance(r, str):
+                canon = name_map.get(r.lower())
+                if canon and canon not in recs:
+                    recs.append(canon)
+
+        # Use extractor recommendations if present; otherwise fallback to Ruby (concierge/orchestrator)
+        selected = recs[:] if recs else ["Ruby"]
+        # keep a merged variable for backward-compatible logging/flows
+        merged: List[str] = selected[:]
+        # Ensure we have at least one fallback
+        if not merged:
+            merged = ["Ruby"]
+
+        # Strong domain override: if message clearly indicates physio, force Rachel as primary and remove Carla.
+        msg_lower_for_override = (message or "").lower()
+        physio_hints_local = ["pain", "injury", "back", "knee", "shoulder", "mobility", "rehab", "twist", "sprain", "swelling"]
+        if any(h in msg_lower_for_override for h in physio_hints_local):
+            if "Rachel" in merged:
+                merged = ["Rachel"] + [a for a in merged if a != "Rachel" and a != "Carla"]
+            else:
+                merged = ["Rachel"] + [a for a in merged if a != "Carla"]
+            logger.debug("orchestrate: strong physio hints detected; forcing Rachel primary and removing Carla; merged=%s", merged)
+
+        # Trim to max_agents
+        selected = merged[:max_agents]
+
         # Heuristic re-ordering to ensure domain specialists are primary when intent/keywords indicate so.
-        # This prevents Ruby (concierge) from being primary and answering domain-specific questions.
         intent = (key_info.get("intent") or "").lower()
         intent_map = {
             "physio": "Rachel",
@@ -489,7 +516,6 @@ Return JSON only for extraction tasks, for example:
         }
         specialist = intent_map.get(intent)
 
-        # Keyword hints override intent when present (strong signals for physio/medical/nutrition)
         msg_lower = (message or "").lower()
         physio_hints = ["pain", "injury", "back", "knee", "shoulder", "mobility", "rehab"]
         medical_hints = ["fever", "bleeding", "chest", "diagnosis", "lab", "blood", "test", "result", "prescription"]
@@ -505,31 +531,128 @@ Return JSON only for extraction tasks, for example:
         elif any(h in msg_lower for h in performance_hints):
             specialist = "Advik"
 
-        # If we found a specialist and it's in the selected list, promote it to primary
-        if specialist and specialist in selected:
-            logger.debug("orchestrate: promoting specialist %s to primary", specialist)
-            selected = [specialist] + [a for a in selected if a != specialist]
+        confidence = float(key_info.get("confidence", 0) or 0)
+        if specialist and specialist in self.agent_descriptions:
+            override = False
+            if not recs:
+                override = True
+            else:
+                if confidence < 0.85:
+                    override = True
+                else:
+                    strong_hint = any(h in msg_lower for h in physio_hints + medical_hints + nutrition_hints + performance_hints)
+                    if strong_hint:
+                        override = True
+
+            if override:
+                if specialist in selected:
+                    selected = [specialist] + [a for a in selected if a != specialist]
+                    logger.debug("orchestrate: promoting specialist %s to primary (override rules applied, confidence=%s, recs=%s)", specialist, confidence, recs)
+                else:
+                    selected = [specialist] + [a for a in selected if a != specialist]
+                    logger.debug("orchestrate: prepending specialist %s to selection (override rules applied, confidence=%s, recs=%s)", specialist, confidence, recs)
+            else:
+                logger.debug("orchestrate: keeping extractor recommendations (recs=%s) despite specialist=%s (confidence=%s)", recs, specialist, confidence)
+
+        try:
+            if specialist == "Rachel" and "Carla" in selected:
+                selected = [s for s in selected if s != "Carla"]
+                if "Rachel" not in selected:
+                    selected = ["Rachel"] + selected
+                logger.debug("orchestrate: removed Carla from selection because physio specialist Rachel was detected")
+            if specialist == "Carla" and "Rachel" in selected:
+                selected = [s for s in selected if s != "Rachel"]
+                if "Carla" not in selected:
+                    selected = ["Carla"] + selected
+                logger.debug("orchestrate: removed Rachel from selection because nutrition specialist Carla was detected")
+        except Exception:
+            pass
 
         orchestrated: List[Dict[str, Any]] = []
         primary = selected[0] if selected else None
-        logger.debug("orchestrate: final selected=%s primary=%s", selected, primary)
+        logger.debug("orchestrate: final selected=%s primary=%s (recs=%s routed=%s)", selected, primary, recs, merged)
 
         for agent in selected:
-            # Build messages for immediate call
             msgs = self.build_agent_messages(agent, key_info, message, context, primary_agent=primary)
-            # Build an explicit handoff prompt for this agent to use if asked to produce domain content after a forward
-            handoff_prompt = [
-                {"role": "system", "content": self.agent_descriptions.get(agent, "")},
-                {"role": "system", "content": "You were asked to respond after an explicit handoff. Provide domain-specific, actionable content only."},
-                {"role": "user", "content": f"Key Info: {json.dumps(key_info)}\n\nUser Message (for your domain): {message}"},
-            ]
+
+            # Determine strategy for this agent
+            confidence = float(key_info.get("confidence", 0) or 0)
+            summary = (key_info.get("summary") or "").strip()
+            entities = key_info.get("entities") or {}
+
+            # Default: agents can respond immediately
+            strategy: Dict[str, Any] = {"wait_for_user": False, "initiator": "orchestrator", "reason": "immediate_response"}
+
+            # Strategy logic: ensure proper sequencing of agent responses
+            if agent == primary:
+                # Primary agent always responds first
+                strategy = {"wait_for_user": False, "initiator": "orchestrator", "reason": "primary_agent"}
+            elif agent == "Ruby" and primary != "Ruby":
+                # Ruby coordinates but doesn't respond if not primary (unless low confidence)
+                if confidence < 0.7 or (not summary and not entities):
+                    strategy = {
+                        "wait_for_user": False,
+                        "initiator": "Ruby",
+                        "action": "ask_clarifying_question",
+                        "clarify_prompt": "Quick clarifying question: please state the main symptom or timeframe in 1-2 short phrases."
+                    }
+                else:
+                    strategy = {"wait_for_user": True, "initiator": "primary", "reason": "ruby_waits_for_primary"}
+            else:
+                # Non-primary specialists wait for primary agent or Ruby to coordinate
+                strategy = {
+                    "wait_for_user": True,
+                    "initiator": primary or "Ruby",
+                    "wait_for_event": "primary_response_or_handoff",
+                    "reason": "waiting_for_primary_or_coordination"
+                }
+
             orchestrated.append(
                 {
                     "agent": agent,
                     "messages": msgs,
-                    "handoff_message": handoff_prompt,
+                    "strategy": strategy,
                 }
             )
-            logger.debug("orchestrate: appended agent=%s messages_len=%d handoff_len=%d", agent, len(msgs), len(handoff_prompt))
+            logger.debug("orchestrate: appended agent=%s strategy=%s messages_len=%d", agent, strategy, len(msgs))
 
         return orchestrated
+
+    def execute_plan(self, orchestrated: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Execute an orchestrated plan.
+
+        Calls agent instances according to each agent's strategy. If an agent's strategy
+        indicates waiting (strategy['wait_for_user'] is True) the agent will be skipped
+        and returned with result=None. Returned list items have keys:
+        - agent: agent name
+        - messages: messages sent
+        - strategy: execution strategy
+        - result: agent response string or None
+        """
+        results: List[Dict[str, Any]] = []
+        for item in orchestrated:
+            agent_name = item.get("agent")
+            messages = item.get("messages", []) or []
+            strategy = item.get("strategy", {}) or {}
+
+            # If instructed to wait, skip execution for now
+            if strategy.get("wait_for_user"):
+                logger.debug("execute_plan: skipping agent=%s (waiting for user/handoff)", agent_name)
+                results.append({"agent": agent_name, "messages": messages, "strategy": strategy, "result": None})
+                continue
+
+            agent_instance = self.agent_instances.get(agent_name)
+            if not agent_instance:
+                logger.debug("execute_plan: no instance registered for agent=%s", agent_name)
+                results.append({"agent": agent_name, "messages": messages, "strategy": strategy, "result": None})
+                continue
+
+            try:
+                resp = agent_instance.call_openrouter(messages)
+            except Exception as exc:
+                logger.exception("execute_plan: agent %s call failed: %s", agent_name, exc)
+                resp = None
+
+            results.append({"agent": agent_name, "messages": messages, "strategy": strategy, "result": resp})
+
+        return results
