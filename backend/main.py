@@ -4,6 +4,7 @@ from typing import Dict, Optional, List
 
 from fastapi import FastAPI
 import logging
+import random
 from fastapi.middleware.cors import CORSMiddleware
 
 # Suppress TracerProvider warnings
@@ -76,10 +77,37 @@ issue_extractor = IssueExtractor()
 plan_extractor = PlanExtractor()
 issue_prioritizer = IssuePrioritizer()
 init_db()
+# Configuration toggle: when true, router/extractor results will auto-create or auto-close issues in the DB.
+AUTO_ISSUE = os.getenv("ROUTER_AUTO_ISSUE", "1").strip().lower() in {"1", "true", "yes"}
 suggestions = SuggestionsStore()
 
-# Logging setup
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# Logging setup (set to DEBUG for detailed pipeline tracing)
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+
+def requires_user_reply(text: str) -> bool:
+    """
+    Heuristic to detect whether a message requires a follow-up from the user.
+    Returns True for obvious questions or common prompt phrases that need user input.
+    """
+    if not isinstance(text, str) or not text.strip():
+        return False
+    t = text.strip().lower()
+    # Quick rule: questions almost always require a user reply
+    if t.endswith("?"):
+        return True
+    # Common phrases that imply we need the user to provide info/confirm
+    triggers = [
+        "can you", "could you", "please tell", "would you", "do you want", "do you have",
+        "please confirm", "please share", "can you share", "could you describe",
+        "let me know", "would you like me to", "should i", "should we", "do you",
+        "are you", "when can", "when would", "please provide", "any medications?",
+        "any medication?", "any medications?", "do you have", "what is your",
+        "what are your", "please send", "please upload", "please attach"
+    ]
+    for p in triggers:
+        if p in t:
+            return True
+    return False
 
 
 class ChatRequest(BaseModel):
@@ -319,7 +347,12 @@ def chat(req: ChatRequest):
         "message": req.message,
         "timestamp": __import__("datetime").datetime.now().isoformat(),
         "context": req.context,
+        "requires_user_response": False,
     })
+    # Record the index and timestamp of this incoming user message so subsequent auto-generated
+    # follow-ups appended during orchestration do not interfere with extraction/issue logic.
+    user_msg_idx = len(conversation_history) - 1
+    user_msg_ts = conversation_history[user_msg_idx].get("timestamp")
 
     # If user reports resolution/relief, auto-close matching open issues
     closed_count = 0
@@ -333,120 +366,87 @@ def chat(req: ChatRequest):
     except Exception as exc:  # noqa: BLE001
         logging.warning("auto-close issues failed: %s", exc)
 
-    # Route to appropriate agents
+    # Use the LLM router/orchestrator to build per-agent prompts and handle handoffs
     if req.sender == "Rohan":
-        # Use simplified orchestrator for routing
-        responding_agents = agent_orchestrator.route_message(req.message, req.context)
-        logging.info("orchestrator selected agents=%s", responding_agents)
-        if req.use_crewai and crewai_orchestrator is not None:
-            for agent in responding_agents:
-                try:
-                    logging.info("crew_call agent=%s model=%s", agent, getattr(crewai_orchestrator, "model", None))
-                    response = crewai_orchestrator.ask(agent, req.message, req.context)
-                    conversation_history.append({
-                        "sender": agent, 
-                        "message": response, 
-                        "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                        "context": req.context
-                    })
-                    # Extract plans from agent response
-                    try:
-                        extracted = plan_extractor.extract(agent, response, req.context)
-                        if extracted:
-                            payload = []
-                            msg_idx = len(conversation_history) - 1
-                            msg_ts = conversation_history[-1].get("timestamp")
-                            for e in extracted:
-                                payload.append(
-                                    {
-                                        "id": os.urandom(8).hex(),
-                                        "user_id": "rohan",
-                                        "agent": agent,
-                                        "title": e.get("title"),
-                                        "details": e.get("details"),
-                                        "category": e.get("category"),
-                                        "status": "proposed",
-                                        "created_at": __import__("datetime").datetime.now().isoformat(),
-                                        "conversation_id": "default",
-                                        "message_index": msg_idx,
-                                        "message_timestamp": msg_ts,
-                                        "source": "llm",
-                                        "origin": "agent_reply",
-                                        "source_message": response,
-                                        "context_json": None,
-                                    }
-                                )
-                            suggestions_add_many(payload)
-                    except Exception as exc:  # noqa: BLE001
-                        logging.warning("plan_extractor failed: %s", exc)
-                except Exception as exc:  # noqa: BLE001
-                    # Fallback to internal BaseAgent for this specific agent
-                    try:
-                        logging.warning("crew_failed agent=%s err=%s; falling back to direct", agent, exc)
-                        fallback_response = agent_orchestrator.agents[agent].respond(req.message, req.context)
-                        conversation_history.append({
-                            "sender": agent, 
-                            "message": fallback_response, 
-                            "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                            "context": req.context
-                        })
-                        try:
-                            extracted = plan_extractor.extract(agent, fallback_response, req.context)
-                            if extracted:
-                                payload = []
-                                msg_idx = len(conversation_history) - 1
-                                msg_ts = conversation_history[-1].get("timestamp")
-                                for e in extracted:
-                                    payload.append(
-                                        {
-                                            "id": os.urandom(8).hex(),
-                                            "user_id": "rohan",
-                                            "agent": agent,
-                                            "title": e.get("title"),
-                                            "details": e.get("details"),
-                                            "category": e.get("category"),
-                                            "status": "proposed",
-                                            "created_at": __import__("datetime").datetime.now().isoformat(),
-                                            "conversation_id": "default",
-                                            "message_index": msg_idx,
-                                            "message_timestamp": msg_ts,
-                                            "source": "llm",
-                                            "origin": "agent_reply",
-                                            "source_message": fallback_response,
-                                            "context_json": None,
-                                        }
-                                    )
-                                suggestions_add_many(payload)
-                        except Exception as exc2:  # noqa: BLE001
-                            logging.warning("plan_extractor failed (fallback): %s", exc2)
-                    except Exception as inner_exc:  # noqa: BLE001
-                        conversation_history.append({
-                            "sender": agent, 
-                            "message": f"Error: {inner_exc}", 
-                            "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                            "context": req.context
-                        })
-        else:
-            # Use internal agent responses only for routed agents
-            for agent_name in responding_agents:
-                try:
-                    logging.info("direct_call agent=%s model=%s", agent_name, os.getenv("OPENROUTER_MODEL"))
-                    response = agent_orchestrator.agents[agent_name].respond(req.message, req.context)
-                except Exception as exc:  # noqa: BLE001
-                    response = f"Error: {exc}"
-                conversation_history.append({
-                    "sender": agent_name, 
-                    "message": response, 
-                    "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                    "context": req.context
-                })
-                # Extract plans from direct path
+        orchestrated = router.orchestrate(req.message, req.context, max_agents=2)
+        selected_agents = [o["agent"] for o in orchestrated]
+        logging.info("orchestrator selected agents=%s", selected_agents)
+
+        for entry in orchestrated:
+            agent_name = entry["agent"]
+            agent_obj = agent_orchestrator.agents.get(agent_name)
+            if agent_obj is None:
+                logging.warning("Agent object for %s not found; skipping", agent_name)
+                continue
+
+            try:
+                # Call the agent with the constructed messages (preserves system prompts + domain instructions)
+                logging.info("call agent=%s via orchestrator", agent_name)
+                response = agent_obj.call_openrouter(entry["messages"])
+
+                # If agent asks to handoff, the response must be exactly "HANDOFF:<AgentName>"
+                if isinstance(response, str) and response.strip().upper().startswith("HANDOFF:"):
+                    # Extract raw target token and normalize to known agent names / aliases
+                    raw_target = response.split("HANDOFF:")[1].strip()
+                    normalized = raw_target.lower().strip()
+
+                    # Canonical name map for known aliases
+                    name_map = {
+                        "ruby": "Ruby",
+                        "carla": "Carla",
+                        "dr. warren": "Dr. Warren",
+                        "dr warren": "Dr. Warren",
+                        "dr warren": "Dr. Warren",
+                        "drwarren": "Dr. Warren",
+                        "doctor": "Dr. Warren",
+                        "advik": "Advik",
+                        "rachel": "Rachel",
+                        "physio": "Rachel",
+                        "physioagent": "Rachel",
+                        "physiotherapist": "Rachel",
+                        "neel": "Neel",
+                    }
+                    target_canonical = name_map.get(normalized)
+
+                    # First try to locate the target in the current orchestrated entries
+                    target_entry = None
+                    if target_canonical:
+                        target_entry = next((e for e in orchestrated if e["agent"] == target_canonical), None)
+
+                    # If not found by canonical map, try case-insensitive match against orchestrated agent names
+                    if not target_entry:
+                        target_entry = next((e for e in orchestrated if e["agent"].lower() == normalized), None)
+
+                    # If target is present in orchestrated set, call its handoff_message
+                    if target_entry:
+                        logging.info("handoff from %s to %s (mapped from '%s')", agent_name, target_entry["agent"], raw_target)
+                        target_agent_obj = agent_orchestrator.agents.get(target_entry["agent"])
+                        if target_agent_obj:
+                            response = target_agent_obj.call_openrouter(target_entry["handoff_message"])
+                        else:
+                            logging.warning("handoff target agent object %s not found", target_entry["agent"])
+                    else:
+                        # If the orchestrated list didn't include the mapped agent, attempt to call the agent directly if known
+                        if target_canonical and target_canonical in agent_orchestrator.agents:
+                            logging.info("handoff from %s to %s (direct call, mapped from '%s')", agent_name, target_canonical, raw_target)
+                            target_agent_obj = agent_orchestrator.agents.get(target_canonical)
+                            response = target_agent_obj.call_openrouter(
+                                [
+                                    {"role": "system", "content": target_agent_obj.system_prompt},
+                                    {"role": "user", "content": f"Key Info: {json.dumps(key_info)}\n\nUser Message (for your domain): {req.message}"}
+                                ]
+                            )
+                        else:
+                            logging.warning("handoff target '%s' (normalized '%s') not recognized; keeping original response", raw_target, normalized)
+
+                # Handle agent response: process plans/suggestions first, then append agent message to conversation history.
                 try:
                     extracted = plan_extractor.extract(agent_name, response, req.context)
                     if extracted:
                         payload = []
-                        msg_idx = len(conversation_history) - 1
-                        msg_ts = conversation_history[-1].get("timestamp")
+                        # message index will be the index after appending this response
+                        msg_idx = len(conversation_history)
+                        msg_ts = __import__("datetime").datetime.now().isoformat()
                         for e in extracted:
                             payload.append(
                                 {
@@ -457,7 +457,7 @@ def chat(req: ChatRequest):
                                     "details": e.get("details"),
                                     "category": e.get("category"),
                                     "status": "proposed",
-                                    "created_at": __import__("datetime").datetime.now().isoformat(),
+                                    "created_at": msg_ts,
                                     "conversation_id": "default",
                                     "message_index": msg_idx,
                                     "message_timestamp": msg_ts,
@@ -469,87 +469,239 @@ def chat(req: ChatRequest):
                             )
                         suggestions_add_many(payload)
                 except Exception as exc:  # noqa: BLE001
-                    logging.warning("plan_extractor failed (direct): %s", exc)
+                    logging.warning("plan_extractor failed (orchestrated): %s", exc)
 
-    # Extract issues from user's message and persist with reference
-    issues = []
-    # Skip extraction entirely if we just closed issues from a resolution/improvement message
-    if closed_count == 0:
+                # Append agent response to conversation history after processing it
+                try:
+                    requires_user = requires_user_reply(response) if isinstance(response, str) else False
+                except Exception:
+                    requires_user = False
+
+                agent_msg_ts = __import__("datetime").datetime.now().isoformat()
+                conversation_history.append({
+                    "sender": agent_name,
+                    "message": response,
+                    "timestamp": agent_msg_ts,
+                    "context": req.context,
+                    "requires_user_response": requires_user,
+                })
+
+                # If the agent's message appears to require a user reply, generate a concise
+                # member-facing follow-up using the Rohan agent profile and append it.
+                # This creates a suggested message from Rohan (the member) that can be routed
+                # to the user's preferred channel / PA. We avoid generating follow-ups for
+                # messages already authored by the member.
+                try:
+                    if requires_user and agent_name.lower() != "rohan" and "Rohan" in agent_orchestrator.agents:
+                        rohan_agent = agent_orchestrator.agents["Rohan"]
+                        # Pick a reply mode to inject randomness into the Rohan reply style.
+                        # This ensures the generated follow-up is directly responsive and varies with member behaviour.
+                        modes = [
+                            "confirm_and_delegate",   # confirm a choice & ask PA to book
+                            "direct_action",          # assert the member's preference and next step
+                            "brief_question",         # ask one short clarifying question
+                            "ack_and_recommend"       # acknowledge and recommend one option
+                        ]
+                        chosen_mode = random.choice(modes)
+                        rohan_prompt = (
+                            f"Agent {agent_name} sent the following message to the member:\n\n"
+                            f"{response}\n\n"
+                            "Using the member profile and preferences, produce a single concise reply AS ROHAN (first-person). "
+                            "Follow these rules exactly:\n"
+                            "- Output only the message text (no meta commentary, no agent names).\n"
+                            "- Keep it 1-2 short sentences and <= 60 words.\n"
+                            "- Include exactly one clear question or one explicit action.\n"
+                            "- If the action should be delegated to the PA, start the action with: 'Please ask Sarah to...'.\n\n"
+                            f"Mode: {chosen_mode}\n\n"
+                            "Context: pick the mode semantics as follows:\n"
+                            "- confirm_and_delegate: confirm your preferred option and ask the PA to execute it (use 'Please ask Sarah to...').\n"
+                            "- direct_action: assert your preference and the immediate action you'll take (e.g., 'I'll take X' or 'I want X').\n"
+                            "- brief_question: ask one brief, direct clarifying question about the agent's suggestion.\n"
+                            "- ack_and_recommend: acknowledge and recommend one of the options (include recommended choice).\n\n"
+                            "Now produce the reply in Rohan's voice."
+                        )
+                        rohan_messages = [
+                            {"role": "system", "content": rohan_agent.system_prompt},
+                            {"role": "user", "content": rohan_prompt},
+                        ]
+                        try:
+                            rohan_response = rohan_agent.call_openrouter(rohan_messages)
+                            rohan_msg_ts = __import__("datetime").datetime.now().isoformat()
+                            conversation_history.append({
+                                "sender": "Rohan",
+                                "message": rohan_response,
+                                "timestamp": rohan_msg_ts,
+                                "context": req.context,
+                                "requires_user_response": False,
+                                "auto_generated": True,
+                            })
+                            logging.info("Generated Rohan follow-up for agent=%s", agent_name)
+                        except Exception as e:
+                            logging.warning("Rohan follow-up generation failed for agent=%s: %s", agent_name, e)
+                except Exception as exc:
+                    logging.debug("Rohan follow-up skipped or failed: %s", exc)
+
+            except Exception as exc:  # noqa: BLE001
+                logging.warning("orchestrated agent call failed agent=%s err=%s; appending error message", agent_name, exc)
+                conversation_history.append({
+                    "sender": agent_name,
+                    "message": f"Error: {exc}",
+                    "timestamp": __import__("datetime").datetime.now().isoformat(),
+                    "context": req.context,
+                    "requires_user_response": False,
+                })
+
+    # Only extract issues/improvements from user messages (not agent/system messages)
+    if req.sender and req.sender.lower() == "rohan":
+        # Use the recorded user message index to base extraction on the actual incoming message,
+        # not on any auto-generated follow-ups appended during agent orchestration.
+        user_entry = conversation_history[user_msg_idx] if (conversation_history and user_msg_idx < len(conversation_history)) else {}
+        skip_issue_processing = False
+
+        # If the user message was auto-generated by the system or is too short / non-text,
+        # do not run extractors or create issues — but do NOT interrupt the conversation flow.
+        if user_entry.get("auto_generated"):
+            logging.debug("Issue extraction: user message was auto-generated by system; skipping extraction but continuing conversation flow.")
+            skip_issue_processing = True
+
+        if not isinstance(req.message, str) or len(req.message.strip()) < 8:
+            logging.debug("Issue extraction: message too short or non-text; skipping extraction but continuing conversation flow.")
+            skip_issue_processing = True
+
+        # Use router extractor first (more structured) only if we did not skip processing.
         try:
-            issues = issue_extractor.extract(req.message, req.context)
+            key_info = router.extract_key_info(req.message, req.context) if not skip_issue_processing else {}
         except Exception as exc:  # noqa: BLE001
-            logging.warning("issue_extractor failed: %s", exc)
-            issues = []
+            logging.warning("router.extract_key_info failed: %s; falling back to issue_extractor", exc)
+            key_info = {}
 
-        # Fallback heuristic if extractor returns nothing (when running without LLM key)
-        if not issues and req.message:
-            msg_lower = req.message.lower()
-            
-            # Skip issue extraction if message contains improvement/resolution markers
-            improvement_markers = [
-                "feels fine", "feel fine", "feels alright", "feel alright", "feels okay", "feel okay",
-                "feels good", "feel good", "feels better", "feel better", "no more", "no longer",
-                "resolved", "better now", "getting better", "improved", "improving", "okay now",
-                "alright now", "good now", "back to normal", "gone", "pain reduced", "less pain",
-                "subsided", "cleared up", "all good", "much better"
-            ]
-            
-            if not any(marker in msg_lower for marker in improvement_markers):
-                category = "other"
-                if any(k in msg_lower for k in ["sleep", "hrv", "recovery", "whoop", "oura", "tired", "fatigue"]):
-                    category = "performance"
-                if any(k in msg_lower for k in ["glucose", "cgm", "sugar", "insulin", "bp", "blood pressure"]):
-                    category = "medical"
-                if any(k in msg_lower for k in ["food", "diet", "meal", "protein", "carb", "nutrition"]):
-                    category = "nutrition"
-                if any(k in msg_lower for k in ["pain", "injury", "mobility", "shoulder", "back", "knee"]):
-                    category = "physio"
-                severity = "medium"
-                if any(k in msg_lower for k in ["severe", "cannot", "can't", "emergency", "chest", "bleeding"]):
-                    severity = "high"
-                issues = [
+        # Use the original user message index for message metadata
+        msg_idx = user_msg_idx
+        msg_ts = user_msg_ts
+        now_iso = __import__("datetime").datetime.now().isoformat()
+
+        # Handle explicit improvements: auto-close matching open issues
+        try:
+            if key_info.get("is_improvement"):
+                ref = f"conv_msg_index:{msg_idx} ts:{msg_ts}"
+                closed_count_impr = issues_close_by_text(req.message, reference=ref, triggered_by="user")
+                if closed_count_impr:
+                    logging.info("auto-closed %s issues from user improvement message", closed_count_impr)
+        except Exception as exc:  # noqa: BLE001
+            logging.warning("auto-close (improvement) failed: %s", exc)
+
+        # Handle explicit new health issues
+        try:
+            # If we already auto-closed issues from this message (closed_count > 0),
+            # do NOT create new issues from the same resolving message even if the router
+            # marked it as a health issue. This avoids the resolving text being re-inserted.
+            if key_info.get("is_health_issue") and closed_count == 0:
+                h = key_info.get("health_issue", {}) or {}
+                title = h.get("title") or (req.message[:80] + ("…" if len(req.message) > 80 else ""))
+                details = h.get("details") or req.message[:500]
+                category = h.get("category") or "other"
+                severity = h.get("severity") or "medium"
+                # Prepare payload and triage
+                try:
+                    triage = issue_prioritizer.prioritize(title, details, req.context)
+                except Exception:
+                    triage = {"priority": "medium", "time_window": "24-72h"}
+                payload = [
                     {
-                        "title": (req.message[:80] + ("…" if len(req.message) > 80 else "")),
-                        "details": req.message[:500],
+                        "id": os.urandom(8).hex(),
+                        "user_id": "rohan",
+                        "title": title,
+                        "details": details,
                         "category": category,
                         "severity": severity,
+                        "status": "open",
+                        "progress_percent": 0,
+                        "last_reviewed_at": now_iso,
+                        "priority": triage.get("priority"),
+                        "time_window": triage.get("time_window"),
+                        "conversation_id": "default",
+                        "message_index": msg_idx,
+                        "message_timestamp": msg_ts,
+                        "created_at": now_iso,
                     }
                 ]
+                issues_add_many(payload)
+                logging.info("Added health issue to DB: %s", title)
+            else:
+                # If the router flagged an incoming message as a health issue but that same
+                # message was also used to auto-close existing issues (closed_count > 0),
+                # skip creating a new issue to avoid recording the resolving message as a new issue.
+                if key_info.get("is_health_issue") and closed_count > 0:
+                    logging.info("Skipping creation of new issue: message marked as health_issue but closed %s existing issue(s).", closed_count)
+                # Not explicitly a health issue — fall back to previous extractor and heuristics
+                issues = []
+                # Skip extraction entirely if we just closed issues from a resolution/improvement message
+                if closed_count == 0:
+                    try:
+                        # Use updated extractor that returns both issues and improvements
+                        extracted_result = issue_extractor.extract_all(req.message, req.context)
+                        issues = extracted_result.get("issues", []) or []
+                        improvements = extracted_result.get("improvements", []) or []
+                        # If extractor returned improvements, attempt auto-close for them immediately
+                        for imp in improvements:
+                            try:
+                                imp_text = imp.get("details") or imp.get("title") or req.message
+                                ref = f"conv_msg_index:{msg_idx} ts:{msg_ts}"
+                                closed = issues_close_by_text(imp_text, reference=ref, triggered_by="user")
+                                if closed:
+                                    logging.info("auto-closed %s issues from extractor improvement: %s", closed, imp.get("title"))
+                            except Exception as e:  # noqa: BLE001
+                                logging.debug("auto-close for improvement failed: %s", e)
+                    except Exception as exc:  # noqa: BLE001
+                        logging.warning("issue_extractor.extract_all failed: %s; falling back to legacy extract()", exc)
+                        try:
+                            issues = issue_extractor.extract(req.message, req.context)
+                        except Exception as exc2:  # noqa: BLE001
+                            logging.warning("issue_extractor.extract failed: %s", exc2)
+                            issues = []
 
-    if issues:
-        payload = []
-        msg_idx = len(conversation_history) - 1
-        msg_ts = conversation_history[-1].get("timestamp") if conversation_history else None
-        now_iso = __import__("datetime").datetime.now().isoformat()
-        for it in issues:
-            # prioritize
-            try:
-                triage = issue_prioritizer.prioritize(it.get("title", ""), it.get("details", ""), req.context)
-            except Exception:
-                triage = {"priority": "medium", "time_window": "24-72h"}
-            payload.append(
-                {
-                    "id": os.urandom(8).hex(),
-                    "user_id": "rohan",
-                    "title": it.get("title"),
-                    "details": it.get("details"),
-                    "category": it.get("category"),
-                    "severity": it.get("severity") or "medium",
-                    "status": "open",
-                    "progress_percent": 0,
-                    "last_reviewed_at": now_iso,
-                    "priority": triage.get("priority"),
-                    "time_window": triage.get("time_window"),
-                    "conversation_id": "default",
-                    "message_index": msg_idx,
-                    "message_timestamp": msg_ts,
-                    "created_at": now_iso,
-                }
-            )
-        try:
-            issues_add_many(payload)
+
+                if issues:
+                    payload = []
+                    for it in issues:
+                        # prioritize
+                        try:
+                            triage = issue_prioritizer.prioritize(it.get("title", ""), it.get("details", ""), req.context)
+                        except Exception:
+                            triage = {"priority": "medium", "time_window": "24-72h"}
+                        payload.append(
+                            {
+                                "id": os.urandom(8).hex(),
+                                "user_id": "rohan",
+                                "title": it.get("title"),
+                                "details": it.get("details"),
+                                "category": it.get("category"),
+                                "severity": it.get("severity") or "medium",
+                                "status": "open",
+                                "progress_percent": 0,
+                                "last_reviewed_at": now_iso,
+                                "priority": triage.get("priority"),
+                                "time_window": triage.get("time_window"),
+                                "conversation_id": "default",
+                                "message_index": msg_idx,
+                                "message_timestamp": msg_ts,
+                                "created_at": now_iso,
+                            }
+                        )
+                    try:
+                        issues_add_many(payload)
+                    except Exception as exc:  # noqa: BLE001
+                        logging.warning("issues_add_many failed: %s", exc)
         except Exception as exc:  # noqa: BLE001
-            logging.warning("issues_add_many failed: %s", exc)
+            logging.warning("health-issue pipeline failed: %s", exc)
+        # If the extractor detected an explicit improvement (but not closed earlier), try auto-close again as heuristic
+        try:
+            if key_info.get("is_improvement") and closed_count == 0:
+                closed_count2 = issues_close_by_text(req.message, reference=f"conv_msg_index:{msg_idx} ts:{msg_ts}", triggered_by="user")
+                if closed_count2:
+                    logging.info("auto-closed %s issues from user improvement message (second pass)", closed_count2)
+        except Exception:
+            pass
 
     persistence.save_conversation_history(conversation_history)
     return conversation_history[-10:]
