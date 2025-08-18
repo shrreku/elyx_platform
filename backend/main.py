@@ -71,10 +71,12 @@ issue_extractor = IssueExtractor()
 plan_extractor = PlanExtractor()
 issue_prioritizer = IssuePrioritizer()
 init_db()
+# Configuration toggle: when true, router/extractor results will auto-create or auto-close issues in the DB.
+AUTO_ISSUE = os.getenv("ROUTER_AUTO_ISSUE", "1").strip().lower() in {"1", "true", "yes"}
 suggestions = SuggestionsStore()
 
-# Logging setup
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# Logging setup (set to DEBUG for detailed pipeline tracing)
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
 
 
 class ChatRequest(BaseModel):
@@ -276,114 +278,50 @@ def chat(req: ChatRequest):
     except Exception as exc:  # noqa: BLE001
         logging.warning("auto-close issues failed: %s", exc)
 
-    # Route to appropriate agents
+    # Use the LLM router/orchestrator to build per-agent prompts and handle handoffs
     if req.sender == "Rohan":
-        # Use simplified orchestrator for routing
-        responding_agents = agent_orchestrator.route_message(req.message, req.context)
-        logging.info("orchestrator selected agents=%s", responding_agents)
-        if req.use_crewai and crewai_orchestrator is not None:
-            for agent in responding_agents:
-                try:
-                    logging.info("crew_call agent=%s model=%s", agent, getattr(crewai_orchestrator, "model", None))
-                    response = crewai_orchestrator.ask(agent, req.message, req.context)
-                    conversation_history.append({
-                        "sender": agent, 
-                        "message": response, 
-                        "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                        "context": req.context
-                    })
-                    # Extract plans from agent response
-                    try:
-                        extracted = plan_extractor.extract(agent, response, req.context)
-                        if extracted:
-                            payload = []
-                            msg_idx = len(conversation_history) - 1
-                            msg_ts = conversation_history[-1].get("timestamp")
-                            for e in extracted:
-                                payload.append(
-                                    {
-                                        "id": os.urandom(8).hex(),
-                                        "user_id": "rohan",
-                                        "agent": agent,
-                                        "title": e.get("title"),
-                                        "details": e.get("details"),
-                                        "category": e.get("category"),
-                                        "status": "proposed",
-                                        "created_at": __import__("datetime").datetime.now().isoformat(),
-                                        "conversation_id": "default",
-                                        "message_index": msg_idx,
-                                        "message_timestamp": msg_ts,
-                                        "source": "llm",
-                                        "origin": "agent_reply",
-                                        "source_message": response,
-                                        "context_json": None,
-                                    }
-                                )
-                            suggestions_add_many(payload)
-                    except Exception as exc:  # noqa: BLE001
-                        logging.warning("plan_extractor failed: %s", exc)
-                except Exception as exc:  # noqa: BLE001
-                    # Fallback to internal BaseAgent for this specific agent
-                    try:
-                        logging.warning("crew_failed agent=%s err=%s; falling back to direct", agent, exc)
-                        fallback_response = agent_orchestrator.agents[agent].respond(req.message, req.context)
-                        conversation_history.append({
-                            "sender": agent, 
-                            "message": fallback_response, 
-                            "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                            "context": req.context
-                        })
-                        try:
-                            extracted = plan_extractor.extract(agent, fallback_response, req.context)
-                            if extracted:
-                                payload = []
-                                msg_idx = len(conversation_history) - 1
-                                msg_ts = conversation_history[-1].get("timestamp")
-                                for e in extracted:
-                                    payload.append(
-                                        {
-                                            "id": os.urandom(8).hex(),
-                                            "user_id": "rohan",
-                                            "agent": agent,
-                                            "title": e.get("title"),
-                                            "details": e.get("details"),
-                                            "category": e.get("category"),
-                                            "status": "proposed",
-                                            "created_at": __import__("datetime").datetime.now().isoformat(),
-                                            "conversation_id": "default",
-                                            "message_index": msg_idx,
-                                            "message_timestamp": msg_ts,
-                                            "source": "llm",
-                                            "origin": "agent_reply",
-                                            "source_message": fallback_response,
-                                            "context_json": None,
-                                        }
-                                    )
-                                suggestions_add_many(payload)
-                        except Exception as exc2:  # noqa: BLE001
-                            logging.warning("plan_extractor failed (fallback): %s", exc2)
-                    except Exception as inner_exc:  # noqa: BLE001
-                        conversation_history.append({
-                            "sender": agent, 
-                            "message": f"Error: {inner_exc}", 
-                            "timestamp": __import__("datetime").datetime.now().isoformat(), 
-                            "context": req.context
-                        })
-        else:
-            # Use internal agent responses only for routed agents
-            for agent_name in responding_agents:
-                try:
-                    logging.info("direct_call agent=%s model=%s", agent_name, os.getenv("OPENROUTER_MODEL"))
-                    response = agent_orchestrator.agents[agent_name].respond(req.message, req.context)
-                except Exception as exc:  # noqa: BLE001
-                    response = f"Error: {exc}"
+        orchestrated = router.orchestrate(req.message, req.context, max_agents=2)
+        selected_agents = [o["agent"] for o in orchestrated]
+        logging.info("orchestrator selected agents=%s", selected_agents)
+
+        for entry in orchestrated:
+            agent_name = entry["agent"]
+            agent_obj = agent_orchestrator.agents.get(agent_name)
+            if agent_obj is None:
+                logging.warning("Agent object for %s not found; skipping", agent_name)
+                continue
+
+            try:
+                # Call the agent with the constructed messages (preserves system prompts + domain instructions)
+                logging.info("call agent=%s via orchestrator", agent_name)
+                response = agent_obj.call_openrouter(entry["messages"])
+
+                # If agent asks to handoff, the response must be exactly "HANDOFF:<AgentName>"
+                if isinstance(response, str) and response.strip().upper().startswith("HANDOFF:"):
+                    # Extract target agent name (case-insensitive match to known agents)
+                    target = response.split("HANDOFF:")[1].strip()
+                    # Find the orchestrated entry for the target agent
+                    target_entry = next((e for e in orchestrated if e["agent"].lower() == target.lower()), None)
+                    if target_entry:
+                        logging.info("handoff from %s to %s", agent_name, target_entry["agent"])
+                        # Send the handoff_message to the target agent and use that reply
+                        target_agent_obj = agent_orchestrator.agents.get(target_entry["agent"])
+                        if target_agent_obj:
+                            response = target_agent_obj.call_openrouter(target_entry["handoff_message"])
+                        else:
+                            logging.warning("handoff target agent object %s not found", target_entry["agent"])
+                    else:
+                        logging.warning("handoff target %s not in orchestrated list", target)
+
+                # Append agent response to conversation history
                 conversation_history.append({
-                    "sender": agent_name, 
-                    "message": response, 
-                    "timestamp": __import__("datetime").datetime.now().isoformat(), 
+                    "sender": agent_name,
+                    "message": response,
+                    "timestamp": __import__("datetime").datetime.now().isoformat(),
                     "context": req.context
                 })
-                # Extract plans from direct path
+
+                # Extract plans from agent response (unchanged behaviour)
                 try:
                     extracted = plan_extractor.extract(agent_name, response, req.context)
                     if extracted:
@@ -412,87 +350,178 @@ def chat(req: ChatRequest):
                             )
                         suggestions_add_many(payload)
                 except Exception as exc:  # noqa: BLE001
-                    logging.warning("plan_extractor failed (direct): %s", exc)
+                    logging.warning("plan_extractor failed (orchestrated): %s", exc)
 
-    # Extract issues from user's message and persist with reference
-    issues = []
-    # Skip extraction entirely if we just closed issues from a resolution/improvement message
-    if closed_count == 0:
+            except Exception as exc:  # noqa: BLE001
+                logging.warning("orchestrated agent call failed agent=%s err=%s; appending error message", agent_name, exc)
+                conversation_history.append({
+                    "sender": agent_name,
+                    "message": f"Error: {exc}",
+                    "timestamp": __import__("datetime").datetime.now().isoformat(),
+                    "context": req.context
+                })
+
+    # Only extract issues/improvements from user messages (not agent/system messages)
+    if req.sender and req.sender.lower() == "rohan":
+        # Use router extractor first (more structured)
         try:
-            issues = issue_extractor.extract(req.message, req.context)
+            key_info = router.extract_key_info(req.message, req.context)
         except Exception as exc:  # noqa: BLE001
-            logging.warning("issue_extractor failed: %s", exc)
-            issues = []
+            logging.warning("router.extract_key_info failed: %s; falling back to issue_extractor", exc)
+            key_info = {}
 
-        # Fallback heuristic if extractor returns nothing (when running without LLM key)
-        if not issues and req.message:
-            msg_lower = req.message.lower()
-            
-            # Skip issue extraction if message contains improvement/resolution markers
-            improvement_markers = [
-                "feels fine", "feel fine", "feels alright", "feel alright", "feels okay", "feel okay",
-                "feels good", "feel good", "feels better", "feel better", "no more", "no longer",
-                "resolved", "better now", "getting better", "improved", "improving", "okay now",
-                "alright now", "good now", "back to normal", "gone", "pain reduced", "less pain",
-                "subsided", "cleared up", "all good", "much better"
-            ]
-            
-            if not any(marker in msg_lower for marker in improvement_markers):
-                category = "other"
-                if any(k in msg_lower for k in ["sleep", "hrv", "recovery", "whoop", "oura", "tired", "fatigue"]):
-                    category = "performance"
-                if any(k in msg_lower for k in ["glucose", "cgm", "sugar", "insulin", "bp", "blood pressure"]):
-                    category = "medical"
-                if any(k in msg_lower for k in ["food", "diet", "meal", "protein", "carb", "nutrition"]):
-                    category = "nutrition"
-                if any(k in msg_lower for k in ["pain", "injury", "mobility", "shoulder", "back", "knee"]):
-                    category = "physio"
-                severity = "medium"
-                if any(k in msg_lower for k in ["severe", "cannot", "can't", "emergency", "chest", "bleeding"]):
-                    severity = "high"
-                issues = [
-                    {
-                        "title": (req.message[:80] + ("…" if len(req.message) > 80 else "")),
-                        "details": req.message[:500],
-                        "category": category,
-                        "severity": severity,
-                    }
-                ]
-
-    if issues:
-        payload = []
         msg_idx = len(conversation_history) - 1
         msg_ts = conversation_history[-1].get("timestamp") if conversation_history else None
         now_iso = __import__("datetime").datetime.now().isoformat()
-        for it in issues:
-            # prioritize
-            try:
-                triage = issue_prioritizer.prioritize(it.get("title", ""), it.get("details", ""), req.context)
-            except Exception:
-                triage = {"priority": "medium", "time_window": "24-72h"}
-            payload.append(
-                {
-                    "id": os.urandom(8).hex(),
-                    "user_id": "rohan",
-                    "title": it.get("title"),
-                    "details": it.get("details"),
-                    "category": it.get("category"),
-                    "severity": it.get("severity") or "medium",
-                    "status": "open",
-                    "progress_percent": 0,
-                    "last_reviewed_at": now_iso,
-                    "priority": triage.get("priority"),
-                    "time_window": triage.get("time_window"),
-                    "conversation_id": "default",
-                    "message_index": msg_idx,
-                    "message_timestamp": msg_ts,
-                    "created_at": now_iso,
-                }
-            )
+
+        # Handle explicit improvements: auto-close matching open issues
         try:
-            issues_add_many(payload)
+            if key_info.get("is_improvement"):
+                ref = f"conv_msg_index:{msg_idx} ts:{msg_ts}"
+                closed_count_impr = issues_close_by_text(req.message, reference=ref, triggered_by="user")
+                if closed_count_impr:
+                    logging.info("auto-closed %s issues from user improvement message", closed_count_impr)
         except Exception as exc:  # noqa: BLE001
-            logging.warning("issues_add_many failed: %s", exc)
+            logging.warning("auto-close (improvement) failed: %s", exc)
+
+        # Handle explicit new health issues
+        try:
+            if key_info.get("is_health_issue"):
+                h = key_info.get("health_issue", {}) or {}
+                title = h.get("title") or (req.message[:80] + ("…" if len(req.message) > 80 else ""))
+                details = h.get("details") or req.message[:500]
+                category = h.get("category") or "other"
+                severity = h.get("severity") or "medium"
+                # Prepare payload and triage
+                try:
+                    triage = issue_prioritizer.prioritize(title, details, req.context)
+                except Exception:
+                    triage = {"priority": "medium", "time_window": "24-72h"}
+                payload = [
+                    {
+                        "id": os.urandom(8).hex(),
+                        "user_id": "rohan",
+                        "title": title,
+                        "details": details,
+                        "category": category,
+                        "severity": severity,
+                        "status": "open",
+                        "progress_percent": 0,
+                        "last_reviewed_at": now_iso,
+                        "priority": triage.get("priority"),
+                        "time_window": triage.get("time_window"),
+                        "conversation_id": "default",
+                        "message_index": msg_idx,
+                        "message_timestamp": msg_ts,
+                        "created_at": now_iso,
+                    }
+                ]
+                issues_add_many(payload)
+                logging.info("Added health issue to DB: %s", title)
+            else:
+                # Not explicitly a health issue — fall back to previous extractor and heuristics
+                issues = []
+                # Skip extraction entirely if we just closed issues from a resolution/improvement message
+                if closed_count == 0:
+                    try:
+                        # Use updated extractor that returns both issues and improvements
+                        extracted_result = issue_extractor.extract_all(req.message, req.context)
+                        issues = extracted_result.get("issues", []) or []
+                        improvements = extracted_result.get("improvements", []) or []
+                        # If extractor returned improvements, attempt auto-close for them immediately
+                        for imp in improvements:
+                            try:
+                                imp_text = imp.get("details") or imp.get("title") or req.message
+                                ref = f"conv_msg_index:{msg_idx} ts:{msg_ts}"
+                                closed = issues_close_by_text(imp_text, reference=ref, triggered_by="user")
+                                if closed:
+                                    logging.info("auto-closed %s issues from extractor improvement: %s", closed, imp.get("title"))
+                            except Exception as e:  # noqa: BLE001
+                                logging.debug("auto-close for improvement failed: %s", e)
+                    except Exception as exc:  # noqa: BLE001
+                        logging.warning("issue_extractor.extract_all failed: %s; falling back to legacy extract()", exc)
+                        try:
+                            issues = issue_extractor.extract(req.message, req.context)
+                        except Exception as exc2:  # noqa: BLE001
+                            logging.warning("issue_extractor.extract failed: %s", exc2)
+                            issues = []
+
+                    # Fallback heuristic if extractor returns nothing (when running without LLM key)
+                    if not issues and req.message:
+                        msg_lower = req.message.lower()
+
+                        # Skip issue extraction if message contains improvement/resolution markers
+                        improvement_markers = [
+                            "feels fine", "feel fine", "feels alright", "feel alright", "feels okay", "feel okay",
+                            "feels good", "feel good", "feels better", "feel better", "no more", "no longer",
+                            "resolved", "better now", "getting better", "improved", "improving", "okay now",
+                            "alright now", "good now", "back to normal", "gone", "pain reduced", "less pain",
+                            "subsided", "cleared up", "all good", "much better"
+                        ]
+
+                        if not any(marker in msg_lower for marker in improvement_markers):
+                            category = "other"
+                            if any(k in msg_lower for k in ["sleep", "hrv", "recovery", "whoop", "oura", "tired", "fatigue"]):
+                                category = "performance"
+                            if any(k in msg_lower for k in ["glucose", "cgm", "sugar", "insulin", "bp", "blood pressure"]):
+                                category = "medical"
+                            if any(k in msg_lower for k in ["food", "diet", "meal", "protein", "carb", "nutrition"]):
+                                category = "nutrition"
+                            if any(k in msg_lower for k in ["pain", "injury", "mobility", "shoulder", "back", "knee"]):
+                                category = "physio"
+                            severity = "medium"
+                            if any(k in msg_lower for k in ["severe", "cannot", "can't", "emergency", "chest", "bleeding"]):
+                                severity = "high"
+                            issues = [
+                                {
+                                    "title": (req.message[:80] + ("…" if len(req.message) > 80 else "")),
+                                    "details": req.message[:500],
+                                    "category": category,
+                                    "severity": severity,
+                                }
+                            ]
+
+                if issues:
+                    payload = []
+                    for it in issues:
+                        # prioritize
+                        try:
+                            triage = issue_prioritizer.prioritize(it.get("title", ""), it.get("details", ""), req.context)
+                        except Exception:
+                            triage = {"priority": "medium", "time_window": "24-72h"}
+                        payload.append(
+                            {
+                                "id": os.urandom(8).hex(),
+                                "user_id": "rohan",
+                                "title": it.get("title"),
+                                "details": it.get("details"),
+                                "category": it.get("category"),
+                                "severity": it.get("severity") or "medium",
+                                "status": "open",
+                                "progress_percent": 0,
+                                "last_reviewed_at": now_iso,
+                                "priority": triage.get("priority"),
+                                "time_window": triage.get("time_window"),
+                                "conversation_id": "default",
+                                "message_index": msg_idx,
+                                "message_timestamp": msg_ts,
+                                "created_at": now_iso,
+                            }
+                        )
+                    try:
+                        issues_add_many(payload)
+                    except Exception as exc:  # noqa: BLE001
+                        logging.warning("issues_add_many failed: %s", exc)
+        except Exception as exc:  # noqa: BLE001
+            logging.warning("health-issue pipeline failed: %s", exc)
+        # If the extractor detected an explicit improvement (but not closed earlier), try auto-close again as heuristic
+        try:
+            if key_info.get("is_improvement") and closed_count == 0:
+                closed_count2 = issues_close_by_text(req.message, reference=f"conv_msg_index:{msg_idx} ts:{msg_ts}", triggered_by="user")
+                if closed_count2:
+                    logging.info("auto-closed %s issues from user improvement message (second pass)", closed_count2)
+        except Exception:
+            pass
 
     persistence.save_conversation_history(conversation_history)
     return conversation_history[-10:]
@@ -1007,4 +1036,3 @@ def api_generate_mock_data():
     except Exception as e:
         logging.error(f"Error generating mock data: {e}")
         return {"success": False, "error": str(e)}
-
